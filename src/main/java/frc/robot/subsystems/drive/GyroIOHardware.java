@@ -12,8 +12,8 @@ import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 import java.util.Queue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.measure.Angle;
-import edu.wpi.first.units.measure.measure.AngularVelocity;
+import edu.wpi.first.units.measure.*;
+import static edu.wpi.first.units.Units.*;
 
 /*Designed to work with CTRE Pigeon 2*/
 public class GyroIOHardware implements GyroIO {

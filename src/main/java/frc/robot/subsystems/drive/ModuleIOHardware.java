@@ -1,10 +1,12 @@
 package frc.robot.subsystems.drive;
+
 import frc.robot.Constants.DriveConstants.ModuleConstants.ModuleConfig;
 import frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive;
 import frc.robot.Constants.DriveConstants.ModuleConstants.Common.Turn;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkClosedLoopController.ArbFFUnits;
 import com.revrobotics.RelativeEncoder;
@@ -15,7 +17,8 @@ import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ControlType;
 import frc.robot.utils.SignalUtils;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.units.measure.measure.Angle;
+import edu.wpi.first.units.measure.*;
+import static edu.wpi.first.units.Units.*;
 import java.util.Queue;
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
@@ -161,7 +164,7 @@ public class ModuleIOHardware implements ModuleIO {
         DrivePID.setReference(
             velocityMetersPerSec,
             ControlType.kVelocity,
-            0,
+            ClosedLoopSlot.kSlot0,
             FFVolts,
             ArbFFUnits.kVoltage);
     }
@@ -171,7 +174,7 @@ public class ModuleIOHardware implements ModuleIO {
         TurnPID.setReference(
             positionRots,
             ControlType.kPosition,
-            0,
+            ClosedLoopSlot.kSlot0,
             FFVolts,
             ArbFFUnits.kVoltage);
     }

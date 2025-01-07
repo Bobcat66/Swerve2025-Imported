@@ -5,6 +5,9 @@ import java.util.function.DoubleSupplier;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
@@ -13,17 +16,50 @@ import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
 /**An odometry thread designed to work with SparkMax motor controllers. This is a singleton class, only one instance exists at any given time*/
 public class OdometryThread {
-    //public static record odomReading(double val,long timestamp) {}
+    public static final Lock readLock = new ReentrantLock();
+    public static final Lock writeLock = new ReentrantLock();
+    public static record OdomReading(double val,long timestamp) {}
+    public static class OdomDoubleBuffer {
+
+        @SuppressWarnings("unchecked")
+        public ArrayBlockingQueue<OdomReading>[] buffers = new ArrayBlockingQueue[2];
+
+        public AtomicInteger readBuf = new AtomicInteger(1);
+        public AtomicInteger writeBuf = new AtomicInteger(0);
+
+        public OdomDoubleBuffer(){
+            buffers[0] = new ArrayBlockingQueue<>(20);
+            buffers[1] = new ArrayBlockingQueue<>(20);
+        }
+
+        public synchronized void swapBuffers() {
+            readLock.lock();
+            writeLock.lock();
+            try {
+                readBuf.compareAndSet(1,0);
+                readBuf.compareAndSet(0,1);
+                writeBuf.compareAndSet(0,1);
+                writeBuf.compareAndSet(1,0);
+            } finally {
+                readLock.unlock();
+                writeLock.unlock();
+            }
+        }
+        
+    }
     private final ArrayList<DoubleSupplier> signals = new ArrayList<>();
     private final ArrayList<BooleanSupplier> errorSignals = new ArrayList<>();
 
     private final ArrayList<Queue<Double>> signalQueues = new ArrayList<>();
     private final ArrayList<Queue<Long>> timestampQueues = new ArrayList<>();
-    //TODO: Make struct array
+
+    private final ArrayList<Queue<OdomReading>> readingQueues = new ArrayList<>();
 
     private static OdometryThread instance = null;
 
     private Notifier notifier = new Notifier(this::run);
+
+    public AtomicInteger sampleCount = new AtomicInteger(0);
 
     private OdometryThread(){
         notifier.setName("OdometryThread");
