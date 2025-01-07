@@ -23,7 +23,7 @@ public interface ModuleIO {
         public Rotation2d[] odometryTurnPositions = new Rotation2d[] {};
     }
 
-    public default void updateInputs(ModuleIOInputs inputs) {}
+    public abstract void updateInputs(ModuleIOInputs inputs);
 
     public default void setDriveVolts(double volts) {}
 

@@ -19,7 +19,12 @@ import frc.robot.utils.SignalUtils;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.*;
 import static edu.wpi.first.units.Units.*;
-import java.util.Queue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.BlockingQueue;
+import java.util.stream.Stream;
+
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -37,9 +42,13 @@ public class ModuleIOHardware implements ModuleIO {
     private final SparkClosedLoopController DrivePID;
     private final RelativeEncoder DriveRelEncoder;
 
-    private final Queue<Long> timestampQueue;
-    private final Queue<Double> drivePositionQueue;
-    private final Queue<Double> turnPositionQueue;
+    private final BlockingQueue<Long> timestampQueue;
+    private final BlockingQueue<Double> drivePositionQueue;
+    private final BlockingQueue<Double> turnPositionQueue;
+
+    private final ArrayList<Long> timestampBuffer = new ArrayList<>();
+    private final ArrayList<Double> drivePositionBuffer = new ArrayList<>();
+    private final ArrayList<Double> turnPositionBuffer = new ArrayList<>();
 
     private final CANcoder m_turnEncoder;
     private final StatusSignal<Angle> turnAbsolutePosition;
@@ -130,6 +139,7 @@ public class ModuleIOHardware implements ModuleIO {
 
     @Override
     public void updateInputs(ModuleIOInputs inputs){
+
         inputs.drivePositionMeters = DriveRelEncoder.getPosition();
         inputs.driveVelocityMetersPerSec = DriveRelEncoder.getVelocity();
         inputs.driveAppliedVolts = m_driveMotor.getBusVoltage() * m_driveMotor.getAppliedOutput();
@@ -141,12 +151,17 @@ public class ModuleIOHardware implements ModuleIO {
         inputs.turnAppliedVolts = m_turnMotor.getBusVoltage() * m_turnMotor.getAppliedOutput();
         inputs.driveCurrentAmps = m_turnMotor.getOutputCurrent();
 
-        inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Long value) -> value/1e6).toArray();
-        inputs.odometryDrivePositionsMeters = drivePositionQueue.stream().mapToDouble((Double value) -> value).toArray();
-        inputs.odometryTurnPositions = turnPositionQueue.stream().map((Double value) -> Rotation2d.fromRotations(value)).toArray(Rotation2d[]::new);
-        timestampQueue.clear();
-        drivePositionQueue.clear();
-        turnPositionQueue.clear();
+        /** Should be called after poll() in the main thread */
+        int samples = OdometryThread.getInstance().sampleCount;
+        OdometryThread.safeDrain(timestampQueue, timestampBuffer,samples);
+        OdometryThread.safeDrain(drivePositionQueue, drivePositionBuffer, samples);
+        OdometryThread.safeDrain(turnPositionQueue, turnPositionBuffer, samples);
+        inputs.odometryTimestamps = timestampBuffer.stream().mapToDouble((Long value) -> value/1e6).toArray();
+        inputs.odometryDrivePositionsMeters = drivePositionBuffer.stream().mapToDouble((Double value) -> value).toArray();
+        inputs.odometryTurnPositions = turnPositionBuffer.stream().map((Double value) -> Rotation2d.fromRotations(value)).toArray(Rotation2d[]::new);
+        timestampBuffer.clear();
+        drivePositionBuffer.clear();
+        turnPositionBuffer.clear();
     }
 
     @Override
@@ -176,7 +191,8 @@ public class ModuleIOHardware implements ModuleIO {
             ControlType.kPosition,
             ClosedLoopSlot.kSlot0,
             FFVolts,
-            ArbFFUnits.kVoltage);
+            ArbFFUnits.kVoltage
+        );
     }
     
 }

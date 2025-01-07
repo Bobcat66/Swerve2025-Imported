@@ -78,11 +78,11 @@ public class Module {
         return odometryModulePositions;
     }
 
-    /*Must be manually called by DriveSubsystem. WARNING: NOT THREAD-SAFE */
+    /** Must be manually called by DriveSubsystem. WARNING: NOT THREAD-SAFE, SHOULD ONLY BE CALLED FROM MAIN THREAD */
     public void periodic(){
         io.updateInputs(inputs);
         Logger.processInputs("Drive/" + ID, inputs);
-        int sampleCount = inputs.odometryDrivePositionsMeters.length;
+        int sampleCount = OdometryThread.getInstance().sampleCount;
         odometryModulePositions = new SwerveModulePosition[sampleCount];
         for (int i = 0; i < sampleCount; i++){
             odometryModulePositions[i] = new SwerveModulePosition(inputs.odometryDrivePositionsMeters[i],inputs.odometryTurnPositions[i]);

@@ -9,19 +9,22 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
-import java.util.Queue;
+import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.*;
-import static edu.wpi.first.units.Units.*;
 
 /*Designed to work with CTRE Pigeon 2*/
 public class GyroIOHardware implements GyroIO {
     private final Pigeon2 m_gyro = new Pigeon2(kGyroPort);
     private final StatusSignal<Angle> yaw = m_gyro.getYaw();
-    private final Queue<Double> yawPositionQueue;
-    private final Queue<Long> yawTimestampQueue;
+    private final BlockingQueue<Double> yawPositionQueue;
+    private final BlockingQueue<Long> yawTimestampQueue;
     private final StatusSignal<AngularVelocity> yawVelocity = m_gyro.getAngularVelocityZWorld();
+
+    private final ArrayList<Double> yawPositionBuffer = new ArrayList<>(20);
+    private final ArrayList<Long> yawTimestampBuffer = new ArrayList<>(20);
     
     public GyroIOHardware() {
         m_gyro.getConfigurator().apply(new Pigeon2Configuration());
@@ -38,9 +41,12 @@ public class GyroIOHardware implements GyroIO {
         inputs.connected = BaseStatusSignal.refreshAll(yaw,yawVelocity).equals(StatusCode.OK);
         inputs.yawPosition = new Rotation2d(yaw.getValue());
         inputs.yawVelocityDegPerSec = yawVelocity.getValue().in(DegreesPerSecond);
-        inputs.odometryYawTimestamps = yawTimestampQueue.stream().mapToDouble((Long value) -> value/1e6).toArray();
-        inputs.odometryYawPositions = yawPositionQueue.stream().map((Double value) -> Rotation2d.fromDegrees(value)).toArray(Rotation2d[]::new);
-        yawTimestampQueue.clear();
-        yawPositionQueue.clear();
+
+        int samples = OdometryThread.getInstance().sampleCount;
+        OdometryThread.safeDrain(yawTimestampQueue, yawTimestampBuffer,samples);
+        OdometryThread.safeDrain(yawPositionQueue, yawPositionBuffer, samples);
+        inputs.odometryYawTimestamps = yawTimestampBuffer.stream().mapToDouble((Long value) -> value/1e6).toArray();
+        inputs.odometryYawPositions = yawPositionBuffer.stream().map((Double value) -> Rotation2d.fromDegrees(value)).toArray(Rotation2d[]::new);
     }
+
 }
