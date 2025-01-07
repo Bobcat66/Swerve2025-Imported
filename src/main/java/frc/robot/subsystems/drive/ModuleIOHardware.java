@@ -18,12 +18,9 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import frc.robot.utils.SignalUtils;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.*;
-import static edu.wpi.first.units.Units.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.BlockingQueue;
-import java.util.stream.Stream;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
@@ -42,9 +39,9 @@ public class ModuleIOHardware implements ModuleIO {
     private final SparkClosedLoopController DrivePID;
     private final RelativeEncoder DriveRelEncoder;
 
-    private final BlockingQueue<Long> timestampQueue;
-    private final BlockingQueue<Double> drivePositionQueue;
-    private final BlockingQueue<Double> turnPositionQueue;
+    private final ConcurrentLinkedQueue<Long> timestampQueue;
+    private final ConcurrentLinkedQueue<Double> drivePositionQueue;
+    private final ConcurrentLinkedQueue<Double> turnPositionQueue;
 
     private final ArrayList<Long> timestampBuffer = new ArrayList<>();
     private final ArrayList<Double> drivePositionBuffer = new ArrayList<>();

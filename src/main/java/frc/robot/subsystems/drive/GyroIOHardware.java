@@ -10,7 +10,7 @@ import static edu.wpi.first.units.Units.DegreesPerSecond;
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
 import java.util.ArrayList;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.*;
@@ -19,8 +19,8 @@ import edu.wpi.first.units.measure.*;
 public class GyroIOHardware implements GyroIO {
     private final Pigeon2 m_gyro = new Pigeon2(kGyroPort);
     private final StatusSignal<Angle> yaw = m_gyro.getYaw();
-    private final BlockingQueue<Double> yawPositionQueue;
-    private final BlockingQueue<Long> yawTimestampQueue;
+    private final ConcurrentLinkedQueue<Double> yawPositionQueue;
+    private final ConcurrentLinkedQueue<Long> yawTimestampQueue;
     private final StatusSignal<AngularVelocity> yawVelocity = m_gyro.getAngularVelocityZWorld();
 
     private final ArrayList<Double> yawPositionBuffer = new ArrayList<>(20);

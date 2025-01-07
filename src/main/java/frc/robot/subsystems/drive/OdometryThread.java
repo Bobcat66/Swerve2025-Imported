@@ -4,11 +4,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,8 +21,8 @@ public class OdometryThread {
     private final ArrayList<DoubleSupplier> signals = new ArrayList<>();
     private final ArrayList<BooleanSupplier> errorSignals = new ArrayList<>();
 
-    private final ArrayList<BlockingQueue<Double>> signalQueues = new ArrayList<>();
-    private final ArrayList<BlockingQueue<Long>> timestampQueues = new ArrayList<>();
+    private final ArrayList<ConcurrentLinkedQueue<Double>> signalQueues = new ArrayList<>();
+    private final ArrayList<ConcurrentLinkedQueue<Long>> timestampQueues = new ArrayList<>();
 
     private final Lock signalLock = new ReentrantLock();
 
@@ -55,8 +52,8 @@ public class OdometryThread {
     }
 
     /**Registers a signal from the main thread*/
-    public BlockingQueue<Double> registerSignal(DoubleSupplier signal){
-        BlockingQueue<Double> queue = new ArrayBlockingQueue<>(20);
+    public ConcurrentLinkedQueue<Double> registerSignal(DoubleSupplier signal){
+        ConcurrentLinkedQueue<Double> queue = new ConcurrentLinkedQueue<>();
         synchronized (signalLock) {
             signals.add(signal);
             signalQueues.add(queue);
@@ -72,8 +69,8 @@ public class OdometryThread {
     }
 
     /**Makes a timestamp queue. Timestamps are recorded in microseconds as a Long */
-    public BlockingQueue<Long> makeTimestampQueue(){
-        BlockingQueue<Long> queue = new ArrayBlockingQueue<>(20);
+    public ConcurrentLinkedQueue<Long> makeTimestampQueue(){
+        ConcurrentLinkedQueue<Long> queue = new ConcurrentLinkedQueue<>();
         synchronized (signalLock) {
             timestampQueues.add(queue);
         }
@@ -109,7 +106,7 @@ public class OdometryThread {
     }
 
     /** Safely reads N elements of type T from a queue into a collection. Will not block if queue is empty*/
-    public static <T> void safeDrain(BlockingQueue<T> source, Collection<T> dest, int n) {
+    public static <T> void safeDrain(ConcurrentLinkedQueue<T> source, Collection<T> dest, int n) {
         for (int i = 0; i < n; i++){
             dest.add(source.poll());
         }
