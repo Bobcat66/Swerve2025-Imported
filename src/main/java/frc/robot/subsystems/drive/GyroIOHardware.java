@@ -47,6 +47,8 @@ public class GyroIOHardware implements GyroIO {
         OdometryThread.safeDrain(yawPositionQueue, yawPositionBuffer, samples);
         inputs.odometryYawTimestamps = yawTimestampBuffer.stream().mapToDouble((Long value) -> value/1e6).toArray();
         inputs.odometryYawPositions = yawPositionBuffer.stream().map((Double value) -> Rotation2d.fromDegrees(value)).toArray(Rotation2d[]::new);
+        yawTimestampBuffer.clear();
+        yawPositionBuffer.clear();
     }
 
 }

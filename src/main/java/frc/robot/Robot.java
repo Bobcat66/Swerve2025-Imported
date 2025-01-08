@@ -28,6 +28,7 @@ public class Robot extends LoggedRobot {
      */
     @Override
     public void robotInit() {
+
         // Configure AdvantageKit. This must be done BEFORE any other instatiation
         Logger.recordMetadata("ProjectName", BuildConstants.MAVEN_NAME);
         Logger.recordMetadata("BuildDate", BuildConstants.BUILD_DATE);
