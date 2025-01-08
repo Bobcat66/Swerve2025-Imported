@@ -1,4 +1,5 @@
 package frc.robot.subsystems.drive;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -7,18 +8,22 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.apache.commons.lang3.function.TriConsumer;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import frc.robot.Constants.DriveConstants.AutoConstants.PIDControl;
+import frc.robot.subsystems.Vision;
+
 import static frc.robot.Constants.DriveConstants.moduleTranslations;
 import static frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive.MaxModuleSpeed;
 import static frc.robot.Constants.DriveConstants.AutoConstants.ppConfig;
@@ -37,20 +42,27 @@ public class DriveSubsystem extends SubsystemBase {
         new SwerveModulePosition()
     }; //For delta tracking
 
-    private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+    private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
+    private final Vision vision;
 
     public DriveSubsystem(
         GyroIO gyroIO,
         ModuleIO FLModuleIO,
         ModuleIO FRModuleIO,
         ModuleIO RLModuleIO,
-        ModuleIO RRModuleIO
+        ModuleIO RRModuleIO,
+        Vision vision
     ){
+
+        vision.registerMeasurementConsumer(poseEstimator::addVisionMeasurement);
+        this.vision = vision;
+
         this.gyroIO = gyroIO;
         modules[0] = new Module(FLModuleIO,"FrontLeft");
         modules[1] = new Module(FRModuleIO,"FrontRight");
         modules[2] = new Module(RLModuleIO, "RearLeft");
         modules[3] = new Module(RRModuleIO, "RearRight");
+        
 
         OdometryThread.getInstance().start();
 
@@ -159,6 +171,9 @@ public class DriveSubsystem extends SubsystemBase {
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
         rawGyroRotation = gyroInputs.yawPosition;
+
+        //Updates internal pose estimator with vision readings
+        vision.updatePoseEstimator();
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */

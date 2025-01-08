@@ -38,7 +38,8 @@ public final class Constants {
 
     public static class VisionConstants {
         public static enum CamConfig {
-            CAM0("camera0",0,0,0,0,0,0);
+            LEFT_ARDUCAM("PLACEHOLDER_0",0,0,0,0,0,0),
+            RIGHT_ARDUCAM("PLACEHOLDER_1",0,0,0,0,0,0);
 
             public final String name;
             public final double x;
