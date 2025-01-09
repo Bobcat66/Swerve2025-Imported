@@ -1,6 +1,5 @@
 package frc.robot.subsystems.drive;
 
-<<<<<<< HEAD
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -48,8 +47,9 @@ public class ModuleIOSim implements ModuleIO {
 
     @Override
     public void setTurnPosition(double positionRots, double FFVolts) {}
-=======
-import com.revrobotics.sim.SparkMaxSim;
+
+//commented out conflicting code
+    /*import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.system.plant.DCMotor;
@@ -62,5 +62,4 @@ public class ModuleIOSim implements ModuleIO {
 
     private final SparkMax m_driveMotor;
     private final SparkMaxSim m_driveSim;
->>>>>>> eda33f71d91d48ea40eec2324a86aa76ed7e5874
-}
+}*/
