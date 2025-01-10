@@ -54,6 +54,8 @@ public class DriveSubsystem extends SubsystemBase {
         Vision vision
     ){
 
+        OdometryThread.getInstance().start();
+
         vision.registerMeasurementConsumer(poseEstimator::addVisionMeasurement);
         this.vision = vision;
 
@@ -63,8 +65,6 @@ public class DriveSubsystem extends SubsystemBase {
         modules[2] = new Module(RLModuleIO, "RearLeft");
         modules[3] = new Module(RRModuleIO, "RearRight");
         
-
-        OdometryThread.getInstance().start();
 
         AutoBuilder.configure(
             this::getPose,
@@ -149,11 +149,13 @@ public class DriveSubsystem extends SubsystemBase {
 
         //Update odometry
         double[] sampleTimestamps = modules[0].getOdometryTimestamps();
-        int sampleCount = sampleTimestamps.length;
+        int sampleCount = OdometryThread.getInstance().sampleCount;
         for (int i = 0; i < sampleCount; i++){
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
             for (int modIndex = 0; modIndex < 4; modIndex++){
+                System.out.println("Modules " + modules.length);
+                System.out.println("OdomPos " + modules[modIndex].getOdometryModulePositions().length);
                 modulePositions[modIndex] = modules[modIndex].getOdometryModulePositions()[i];
                 moduleDeltas[modIndex] = new SwerveModulePosition(
                     modulePositions[modIndex].distanceMeters - lastModulePositions[modIndex].distanceMeters,

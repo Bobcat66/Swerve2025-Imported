@@ -79,9 +79,12 @@ public class Module {
         io.updateInputs(inputs);
         Logger.processInputs("Drive/" + ID, inputs);
         int sampleCount = OdometryThread.getInstance().sampleCount;
+        System.out.println(sampleCount);
         odometryModulePositions = new SwerveModulePosition[sampleCount];
+        System.out.println("ODOM " + odometryModulePositions.length);
         for (int i = 0; i < sampleCount; i++){
             odometryModulePositions[i] = new SwerveModulePosition(inputs.odometryDrivePositionsMeters[i],inputs.odometryTurnPositions[i]);
         }
+        System.out.println("ODOM " + odometryModulePositions.length);
     }
 }
