@@ -50,11 +50,13 @@ public class OdometryThread {
     }
 
     public void start(){
+        
         if (Akit.currentMode == 1) {
             //Running simulation, disable odometry thread
             sampleCount = 1;
             return;
         }
+
         notifier.startPeriodic(1.0/odometryFrequencyHz);
     }
 
