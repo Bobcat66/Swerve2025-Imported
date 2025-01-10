@@ -6,8 +6,8 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
 public class ModuleIOSim implements ModuleIO {
-    private final DCMotorSim m_driveSim = new DCMotorSim(, 1, 0.01);
-    private final DCMotorSim m_turnSim = new DCMotorSim(1, 12.8, 0.004);
+    private final DCMotorSim m_driveSim = new DCMotorSim(DCMotor.getNEO(1), 1, 0.01);
+    private final DCMotorSim m_turnSim = new DCMotorSim(DCMotor.getNEO(1), 12.8, 0.004);
 
 
     private double turnSetpoint = 0;
