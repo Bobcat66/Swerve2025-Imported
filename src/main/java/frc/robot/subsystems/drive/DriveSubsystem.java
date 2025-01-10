@@ -175,7 +175,7 @@ public class DriveSubsystem extends SubsystemBase {
         poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
-        vision.updatePoseEstimator();
+        //vision.updatePoseEstimator();
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */

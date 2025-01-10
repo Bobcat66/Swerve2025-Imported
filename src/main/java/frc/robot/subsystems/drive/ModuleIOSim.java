@@ -111,6 +111,7 @@ public class ModuleIOSim implements ModuleIO {
     public void updateInputs(ModuleIOInputs inputs) {
         m_turnSim.iterate(m_turnSim.getSetpoint(), m_turnSim.getBusVoltage(), 0.02);
         m_driveSim.iterate(m_driveSim.getSetpoint(), m_driveSim.getBusVoltage(), 0.02);
+        
         inputs.drivePositionMeters = driveEncoderSim.getPosition();
         inputs.driveVelocityMetersPerSec = driveEncoderSim.getVelocity();
         inputs.driveAppliedVolts = m_driveSim.getBusVoltage() * m_driveSim.getAppliedOutput();
