@@ -70,7 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            (ChassisSpeeds speeds, DriveFeedforwards ff) -> driveCLCO(speeds), //TODO: Implement drivefeedforwards
+            this::driveCLCO,
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
