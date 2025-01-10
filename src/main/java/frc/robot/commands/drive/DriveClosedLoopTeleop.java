@@ -4,6 +4,7 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import static edu.wpi.first.units.Units.FeetPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
@@ -30,8 +31,8 @@ public class DriveClosedLoopTeleop extends Command {
     @Override
     public void execute() {
         ChassisSpeeds speeds = new ChassisSpeeds(
-            FeetPerSecond.of(scaleSpeed(xTransSpeedSupplier.getAsDouble()) * 5),
-            FeetPerSecond.of(scaleSpeed(yTransSpeedSupplier.getAsDouble()) * 5),
+            MetersPerSecond.of(scaleSpeed(xTransSpeedSupplier.getAsDouble()) * 5),
+            MetersPerSecond.of(scaleSpeed(yTransSpeedSupplier.getAsDouble()) * 5),
             RotationsPerSecond.of(1).times(omegaSupplier.getAsDouble() * 0.5)
         );
         m_subsystem.driveCLCO(

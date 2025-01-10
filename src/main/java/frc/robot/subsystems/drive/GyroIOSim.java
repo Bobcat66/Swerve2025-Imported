@@ -7,6 +7,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
 public class GyroIOSim implements GyroIO{
+    
     private Rotation2d simRotation = new Rotation2d();
    
     public GyroIOSim() {

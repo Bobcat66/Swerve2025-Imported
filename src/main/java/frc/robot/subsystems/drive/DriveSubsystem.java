@@ -154,8 +154,7 @@ public class DriveSubsystem extends SubsystemBase {
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
             for (int modIndex = 0; modIndex < 4; modIndex++){
-                System.out.println("Modules " + modules.length);
-                System.out.println("OdomPos " + modules[modIndex].getOdometryModulePositions().length);
+            
                 modulePositions[modIndex] = modules[modIndex].getOdometryModulePositions()[i];
                 moduleDeltas[modIndex] = new SwerveModulePosition(
                     modulePositions[modIndex].distanceMeters - lastModulePositions[modIndex].distanceMeters,
@@ -173,6 +172,7 @@ public class DriveSubsystem extends SubsystemBase {
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
         rawGyroRotation = gyroInputs.yawPosition;
+        poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
         vision.updatePoseEstimator();
