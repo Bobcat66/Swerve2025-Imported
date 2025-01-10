@@ -6,8 +6,8 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 
-public class GyroIOSim implements GyroIO{
-    
+public class GyroIOSim implements GyroIO {
+
     private Rotation2d simRotation = new Rotation2d();
    
     public GyroIOSim() {
@@ -17,7 +17,7 @@ public class GyroIOSim implements GyroIO{
     //initially updates the position once the gyro is connected
     @Override
     public void updateInputs(GyroIOInputs inputs) {
-        inputs.connected = true;
+        inputs.connected = false; //Drive Subsystem Odometry automatically calculates rotation 
         inputs.yawPosition = simRotation;
         inputs.yawVelocityDegPerSec = 0.0; //Different from last year's code, check if works
     }
@@ -25,7 +25,7 @@ public class GyroIOSim implements GyroIO{
     //calculates how much robot has rotated and adds it to where it previously was oriented
     @Override
     public void deriveGyro(SwerveModuleState[] swerveModuleStates, SwerveDriveKinematics kinematics){
-        simRotation = simRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond *0.02));
+        simRotation = simRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond * 0.02));
         Logger.recordOutput("TEST/swerveModuleStates", swerveModuleStates);
         Logger.recordOutput("TEST/simRotation", simRotation);
     }

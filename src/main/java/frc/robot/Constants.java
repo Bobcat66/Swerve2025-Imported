@@ -124,10 +124,10 @@ public final class Constants {
                     public static final double gearRatio = 6.75;
                     public static final double VoltageCompensation = 12;
                     public static final double MaxModuleSpeed = 14.0; //Maximum attainable module speed
-                    public static final double WheelRadius = Units.inchesToMeters(4); //Meters
+                    public static final double WheelRadius = 0.0508; //2 inches Meters
                     public static final double WheelCOF = 1.0; //Coefficient of friction
-                    public static final double PositionConversionFactor = 2 * WheelRadius*Math.PI/gearRatio; //Units: Meters
-                    public static final double VelocityConversionFactor = PositionConversionFactor*60; //Units: Meters per second
+                    public static final double PositionConversionFactor = 2*WheelRadius*Math.PI/gearRatio; //Units: Meters
+                    public static final double VelocityConversionFactor = PositionConversionFactor / 60; //Units: Meters per second
 
                     //PID constants
                     public static final double kP = 0.035;

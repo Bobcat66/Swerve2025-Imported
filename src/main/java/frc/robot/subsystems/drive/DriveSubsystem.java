@@ -171,11 +171,21 @@ public class DriveSubsystem extends SubsystemBase {
             }
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
-        rawGyroRotation = gyroInputs.yawPosition;
+        if (gyroInputs.connected) {
+            rawGyroRotation = gyroInputs.yawPosition;
+        } else {
+            rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(getModuleStates()).omegaRadiansPerSecond * 0.02));
+        }
+
         poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
         //vision.updatePoseEstimator();
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */

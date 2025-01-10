@@ -126,6 +126,8 @@ public class ModuleIOHardware implements ModuleIO {
         
         m_driveMotor.configure(driveConfig,ResetMode.kResetSafeParameters,PersistMode.kPersistParameters);
         DriveRelEncoder.setPosition(0.0);
+
+
         
         timestampQueue = OdometryThread.getInstance().makeTimestampQueue();
         drivePositionQueue = OdometryThread.getInstance().registerSignal(SignalUtils.getSparkMaxPositionSignal(m_driveMotor));
