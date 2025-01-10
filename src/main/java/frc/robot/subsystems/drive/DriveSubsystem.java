@@ -70,7 +70,7 @@ public class DriveSubsystem extends SubsystemBase {
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            (ChassisSpeeds speeds, DriveFeedforwards ff) -> driveCLCO(speeds), //TODO: Implement drivefeedforwards
+            (ChassisSpeeds speeds, DriveFeedforwards ff) -> drive(speeds), //TODO: Implement drivefeedforwards
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -111,7 +111,7 @@ public class DriveSubsystem extends SubsystemBase {
     }
 
     /**Chassis-oriented Closed-Loop driving*/
-    public void driveCLCO(ChassisSpeeds speeds){
+    public void drive(ChassisSpeeds speeds){
         ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
@@ -119,11 +119,6 @@ public class DriveSubsystem extends SubsystemBase {
             modules[i].setDesiredState(setpointStates[i]);
         }
         Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-    }
-
-    /**Field-oriented Closed-loop driving */
-    public void driveCLFO(ChassisSpeeds speeds){
-
     }
 
     @Override
