@@ -3,8 +3,8 @@ package frc.robot.subsystems;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import org.apache.commons.lang3.function.TriConsumer;
 
+import org.apache.commons.lang3.function.TriConsumer;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
@@ -20,11 +20,11 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.Constants.VisionConstants.CamConfig;
-
-import static frc.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
+import static frc.robot.Constants.VisionConstants.Coordinates.reefCoordinates;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kFallbackStrategy;
-import static frc.robot.Constants.VisionConstants.PhotonVision.kSingleTagDefaultStdDevs;
+import static frc.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kMultiTagDefaultStdDevs;
+import static frc.robot.Constants.VisionConstants.PhotonVision.kSingleTagDefaultStdDevs;
 
 public class Vision {
 
@@ -123,5 +123,42 @@ public class Vision {
         }
     }
 
-}
+    /**
+     * @author Knivier
+     * @param robotX
+     * @param robotY
+     * @return Coordinates of the closest april tag
+     */
+    public double[] closestAprilTag(int robotX, int robotY){
+        double tempMinDistance = -1; // Distance away from april tag
+        double aprilCoordinates[] = new double[2];
 
+
+        for (int i = 0; i < reefCoordinates.length; i++){
+            double aprilX = reefCoordinates[i][0];
+            double aprilY = reefCoordinates[i][1];
+            // Robot is 1 apriltag is 2
+            double distance = Math.sqrt(Math.pow(aprilX - robotX, 2) + Math.pow(aprilY - robotY, 2));
+            if (tempMinDistance == -1 || distance < tempMinDistance) {
+                tempMinDistance = distance;
+                aprilCoordinates[0] = aprilX;
+                aprilCoordinates[1] = aprilY;
+            }
+        }
+        return aprilCoordinates; //yay
+    }
+
+
+    public double[] leftCoordinateCentering(double x, double y){
+
+        
+        return null;
+    }
+
+    public double[] rightCoordinateCentering(double x, double y){
+
+        return null;
+    }
+
+
+}
