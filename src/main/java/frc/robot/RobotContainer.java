@@ -73,9 +73,12 @@ public class RobotContainer {
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
         m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
-            () -> 1.0,
-            () -> 1.0, 
-            () -> 1.0, m_drive));
+            () -> -m_driverController.getLeftY(),
+            () -> -m_driverController.getLeftX(),
+            () -> -m_driverController.getRightX(),
+            () -> m_driverController.rightBumper().getAsBoolean(),
+            () -> m_driverController.leftBumper().getAsBoolean(),
+            m_drive));
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
     }
