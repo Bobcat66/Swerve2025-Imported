@@ -54,6 +54,8 @@ public class DriveSubsystem extends SubsystemBase {
         Vision vision
     ){
 
+        OdometryThread.getInstance().start();
+
         vision.registerMeasurementConsumer(poseEstimator::addVisionMeasurement);
         this.vision = vision;
 
@@ -64,13 +66,11 @@ public class DriveSubsystem extends SubsystemBase {
         modules[3] = new Module(RRModuleIO, "RearRight");
         
 
-        OdometryThread.getInstance().start();
-
         AutoBuilder.configure(
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            (ChassisSpeeds speeds, DriveFeedforwards ff) -> drive(speeds), //TODO: Implement drivefeedforwards
+            this::driveCLCO,
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -144,11 +144,12 @@ public class DriveSubsystem extends SubsystemBase {
 
         //Update odometry
         double[] sampleTimestamps = modules[0].getOdometryTimestamps();
-        int sampleCount = sampleTimestamps.length;
+        int sampleCount = OdometryThread.getInstance().sampleCount;
         for (int i = 0; i < sampleCount; i++){
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
             for (int modIndex = 0; modIndex < 4; modIndex++){
+            
                 modulePositions[modIndex] = modules[modIndex].getOdometryModulePositions()[i];
                 moduleDeltas[modIndex] = new SwerveModulePosition(
                     modulePositions[modIndex].distanceMeters - lastModulePositions[modIndex].distanceMeters,
@@ -165,10 +166,21 @@ public class DriveSubsystem extends SubsystemBase {
             }
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
-        rawGyroRotation = gyroInputs.yawPosition;
+        if (gyroInputs.connected) {
+            rawGyroRotation = gyroInputs.yawPosition;
+        } else {
+            rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(getModuleStates()).omegaRadiansPerSecond * 0.02));
+        }
+
+        poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
-        vision.updatePoseEstimator();
+        //vision.updatePoseEstimator();
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */
