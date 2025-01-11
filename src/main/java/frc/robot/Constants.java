@@ -33,6 +33,8 @@ public final class Constants {
     public static class OIConstants {
         public static class Driver {
             public static final int kDriverControllerPort = 0;
+            public static final double kControllerDeadband = 0.15;
+            public static final double kControllerTriggerThreshold = 0.7;
         }
     }
 
@@ -154,7 +156,7 @@ public final class Constants {
                     public static final double VelocityConversionFactor = PositionConversionFactor; //Units: RPM
 
                     //PID constants
-                    public static double kP = 0.75;
+                    public static final double kP = 0.75;
                     public static final double kI = 0.0;
                     public static final double kD = 0.0001;
                 }

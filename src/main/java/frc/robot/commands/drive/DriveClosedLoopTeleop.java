@@ -46,7 +46,8 @@ public class DriveClosedLoopTeleop extends Command {
             applyRotationClutch(omegaSupplier.getAsDouble()  * DriveConstants.maxRotationSpeed)
         );
         m_subsystem.drive(
-            speeds
+            speeds,
+            false
         );
     }
 

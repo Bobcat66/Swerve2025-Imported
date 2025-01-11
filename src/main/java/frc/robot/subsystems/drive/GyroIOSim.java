@@ -25,7 +25,7 @@ public class GyroIOSim implements GyroIO {
     //calculates how much robot has rotated and adds it to where it previously was oriented
     @Override
     public void deriveGyro(SwerveModuleState[] swerveModuleStates, SwerveDriveKinematics kinematics){
-        simRotation = simRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond * 0.02));
+        //simRotation = simRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond * 0.02));
         Logger.recordOutput("TEST/swerveModuleStates", swerveModuleStates);
         Logger.recordOutput("TEST/simRotation", simRotation);
     }
