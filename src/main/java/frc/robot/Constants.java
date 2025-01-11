@@ -78,6 +78,10 @@ public final class Constants {
         public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
         public static final double maxTranslationSpeed = 5.0; //METERS PER SECOND
         public static final double maxRotationSpeed = 2 * Math.PI; // Radians Per Second
+        public static final double singleClutchTranslationFactor = 0.5;
+        public static final double singleClutchRotationFactor = 0.5;
+        public static final double doubleClutchTranslationFactor = 0.3;
+        public static final double doubleClutchRotationFactor = 0.35;
         //public static final double wheelRadius = 0.0508; //Meters
         public static final Translation2d[] moduleTranslations = new Translation2d[] {
             new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
