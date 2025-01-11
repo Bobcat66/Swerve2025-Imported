@@ -75,7 +75,7 @@ public final class Constants {
          * @description See https://docs.google.com/spreadsheets/d/1Av8BR9JlQeEoLwIn7KNyb3VgK5JVorWvDeGdq4DshHk/edit?gid=0#gid=0
          */
         public static class Coordinates {
-            public static final double[][] reefCoordinates = new double[][]{
+            public static final double[][] reefAprilCoordinates = new double[][]{
                     {4.073906, 3.306318},
                     {3.6576, 4.0259},
                     {4.073906, 4.745482},
@@ -88,6 +88,28 @@ public final class Constants {
                     {12.643358, 4.745482},
                     {12.227306, 4.0259},
                     {12.643358, 3.306318} // Sect 2 (RED) ends
+            };
+
+            public static final double[] reefAprilAngles = new double[]{
+                240,
+                180,
+                120,
+                60,
+                0,
+                300,
+                300,
+                0,
+                60,
+                120,
+                180,
+                240
+        };
+
+            public static final double[][] REEF_LEFT_BRANCH_COORDINATES = new double[][]{
+                {0.0, 0.0} // Empty, find later BY THE ORDER OF THE SHEET
+            };
+            public static final double[][] REEF_RIGHT_BRANCH_COORDINATES = new double[][]{
+                {0.0, 0.0} // Empty, find later BY THE ORDER OF THE SHEET
             };
         }
 
