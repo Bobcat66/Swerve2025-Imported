@@ -20,7 +20,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.Constants.VisionConstants.CamConfig;
-import static frc.robot.Constants.VisionConstants.Coordinates.reefCoordinates;
+import static frc.robot.Constants.VisionConstants.Coordinates.reefAprilCoordinates;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kFallbackStrategy;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kMultiTagDefaultStdDevs;
@@ -134,9 +134,9 @@ public class Vision {
         double aprilCoordinates[] = new double[2];
 
 
-        for (int i = 0; i < reefCoordinates.length; i++){
-            double aprilX = reefCoordinates[i][0];
-            double aprilY = reefCoordinates[i][1];
+        for (int i = 0; i < reefAprilCoordinates.length; i++){
+            double aprilX = reefAprilCoordinates[i][0];
+            double aprilY = reefAprilCoordinates[i][1];
             // Robot is 1 apriltag is 2
             double distance = Math.sqrt(Math.pow(aprilX - robotX, 2) + Math.pow(aprilY - robotY, 2));
             if (tempMinDistance == -1 || distance < tempMinDistance) {
@@ -150,7 +150,7 @@ public class Vision {
 
 
     public double[] leftCoordinateCentering(double x, double y){
-
+        
         
         return null;
     }
