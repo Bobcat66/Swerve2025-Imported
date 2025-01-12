@@ -45,10 +45,7 @@ public class DriveClosedLoopTeleop extends Command {
             applyTranslationClutch(scaleSpeed(yTransSpeedSupplier.getAsDouble()) * DriveConstants.maxTranslationSpeed),
             applyRotationClutch(omegaSupplier.getAsDouble()  * DriveConstants.maxRotationSpeed)
         );
-        m_subsystem.drive(
-            speeds,
-            false
-        );
+        m_subsystem.driveCO(speeds);
     }
 
     @Override

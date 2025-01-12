@@ -73,7 +73,7 @@ public class DriveSubsystem extends SubsystemBase {
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            (speeds) -> drive(speeds, false),
+            this::driveCO,
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -113,11 +113,22 @@ public class DriveSubsystem extends SubsystemBase {
         poseEstimator.resetPosition(rawGyroRotation,getModulePositions(),newPose);
     }
 
-    /**Closed-Loop driving*/
-    public void drive(ChassisSpeeds speeds, boolean isFieldOriented){
-        if(isFieldOriented) speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rawGyroRotation);
-        ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discSpeeds);
+    /**Field-oriented Closed-Loop driving*/
+    public void driveFO(ChassisSpeeds speeds){
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rawGyroRotation);
+        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
+        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
+        for (int i = 0; i < 4; i++) {
+            modules[i].setDesiredState(setpointStates[i]);
+        }
+        SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
+        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+        Logger.recordOutput("SwerveStates/Actual", actualStates);
+    }
+
+    /** Chassis-oriented Closed-loop driving */
+    public void driveCO(ChassisSpeeds speeds) {
+        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(setpointStates[i]);
