@@ -23,6 +23,8 @@ import frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive;
 import frc.robot.Constants.DriveConstants.ModuleConstants.Common.Turn;
 import frc.robot.Constants.DriveConstants.ModuleConstants.ModuleConfig;
 
+import org.littletonrobotics.junction.Logger;
+
 public class ModuleIOSim implements ModuleIO {
     private final DCMotor neoSim = DCMotor.getNEO(1);
 

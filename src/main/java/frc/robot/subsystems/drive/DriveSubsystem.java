@@ -26,6 +26,9 @@ import frc.robot.subsystems.Vision;
 
 import static frc.robot.Constants.DriveConstants.moduleTranslations;
 import static frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive.MaxModuleSpeed;
+
+import java.util.ArrayList;
+
 import static frc.robot.Constants.DriveConstants.AutoConstants.ppConfig;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -70,7 +73,7 @@ public class DriveSubsystem extends SubsystemBase {
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            this::driveCLCO,
+            (speeds) -> drive(speeds, false),
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -110,20 +113,18 @@ public class DriveSubsystem extends SubsystemBase {
         poseEstimator.resetPosition(rawGyroRotation,getModulePositions(),newPose);
     }
 
-    /**Chassis-oriented Closed-Loop driving*/
-    public void driveCLCO(ChassisSpeeds speeds){
+    /**Closed-Loop driving*/
+    public void drive(ChassisSpeeds speeds, boolean isFieldOriented){
+        if(isFieldOriented) speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rawGyroRotation);
         ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discSpeeds);
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(setpointStates[i]);
         }
+        SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
         Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-    }
-
-    /**Field-oriented Closed-loop driving */
-    public void driveCLFO(ChassisSpeeds speeds){
-
+        Logger.recordOutput("SwerveStates/Actual", actualStates);
     }
 
     @Override
@@ -161,6 +162,7 @@ public class DriveSubsystem extends SubsystemBase {
                     modulePositions[modIndex].angle);
                 lastModulePositions[modIndex] = modulePositions[modIndex];
             }
+            /*
             if (gyroInputs.connected) {
                 // Use the real gyro angle
                 rawGyroRotation = gyroInputs.odometryYawPositions[i];
@@ -168,7 +170,7 @@ public class DriveSubsystem extends SubsystemBase {
                 // Use the angle delta from the kinematics and module deltas
                 Twist2d twist = kinematics.toTwist2d(moduleDeltas);
                 rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-            }
+            }*/
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
         if (gyroInputs.connected) {
