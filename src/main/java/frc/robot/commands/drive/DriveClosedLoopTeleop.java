@@ -45,7 +45,7 @@ public class DriveClosedLoopTeleop extends Command {
             applyTranslationClutch(scaleSpeed(yTransSpeedSupplier.getAsDouble()) * DriveConstants.maxTranslationSpeed),
             applyRotationClutch(omegaSupplier.getAsDouble()  * DriveConstants.maxRotationSpeed)
         );
-        m_subsystem.driveCO(speeds);
+        m_subsystem.driveFO(speeds);
     }
 
     @Override
@@ -53,17 +53,17 @@ public class DriveClosedLoopTeleop extends Command {
         //m_subsystem.stop();
     }
 
-    public double scaleSpeed(double speed){
+    private double scaleSpeed(double speed){
         return speed / Math.max(Math.sqrt(Math.pow(xTransSpeedSupplier.getAsDouble(), 2) + Math.pow(yTransSpeedSupplier.getAsDouble(), 2)), 1);
     }
 
-    public double applyTranslationClutch(double translationalSpeed){
+    private double applyTranslationClutch(double translationalSpeed){
         if(doubleClutchSupplier.getAsBoolean()) return translationalSpeed * DriveConstants.doubleClutchTranslationFactor;
         if(singleClutchSupplier.getAsBoolean()) return translationalSpeed * DriveConstants.singleClutchTranslationFactor;
         return translationalSpeed;
     }
 
-    public double applyRotationClutch(double rotationalSpeed){
+    private double applyRotationClutch(double rotationalSpeed){
         if(doubleClutchSupplier.getAsBoolean()) return rotationalSpeed * DriveConstants.doubleClutchRotationFactor;
         if(singleClutchSupplier.getAsBoolean()) return rotationalSpeed * DriveConstants.singleClutchRotationFactor;
         return rotationalSpeed;

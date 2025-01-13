@@ -80,8 +80,8 @@ public final class Constants {
         public static final int odometryFrequencyHz = 250;
         public static final double wheelBase = Units.inchesToMeters(27.5); //Meters
         public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
-        public static final double maxTranslationSpeed = 5.0; //METERS PER SECOND
-        public static final double maxRotationSpeed = 2 * Math.PI; // Radians Per Second
+        public static final double maxTranslationSpeed = Units.feetToMeters(1); //meters per second
+        public static final double maxRotationSpeed = 0.5; // Radians Per Second
         public static final double singleClutchTranslationFactor = 0.5;
         public static final double singleClutchRotationFactor = 0.5;
         public static final double doubleClutchTranslationFactor = 0.3;
@@ -139,14 +139,17 @@ public final class Constants {
                     public static final double VelocityConversionFactor = PositionConversionFactor / 60; //Units: Meters per second
 
                     //PID constants
-                    public static final double kP = 0.035;
+                    public static final double kP = 0.0015;
                     public static final double kI = 0.000;
-                    public static final double kD = 0.0012;
+                    public static final double kD = 0.0000;
 
                     //Feedforward constants
                     public static final double kV = 2.78;
                     public static final double kS = 0.0;
                     public static final double kA = 0.0;
+
+                    //Physical constants
+                    public static final double MoI = 0.025; //Placeholder, run sysID characterization routine to find actual value
                 }
     
                 public static class Turn {
@@ -157,9 +160,17 @@ public final class Constants {
                     public static final double VelocityConversionFactor = PositionConversionFactor; //Units: RPM
 
                     //PID constants
-                    public static final double kP = 0.75;
+                    public static final double kP = 1.05;
                     public static final double kI = 0.0;
-                    public static final double kD = 0.0001;
+                    public static final double kD = 0.0;
+
+                    //Feedforward constants
+                    public static final double kV = 2.78;
+                    public static final double kS = 0.0;
+                    public static final double kA = 0.0;
+
+                    //Physical constants
+                    public static final double MoI = 0.025; //Placeholder
                 }
             }
             public static enum ModuleConfig {
