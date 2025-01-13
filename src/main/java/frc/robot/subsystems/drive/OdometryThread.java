@@ -50,6 +50,7 @@ public class OdometryThread {
 
     public void start(){
 
+        //Compile-time evaluation
         if (Akit.currentMode == 1) {
             //Running simulation, disable odometry thread
             sampleCount = 1;
@@ -110,6 +111,10 @@ public class OdometryThread {
 
     /** This method should be called ONCE per main-cycle thread */
     public void poll() {
+        if (Akit.currentMode == 1){
+            //Disables polling during simulation
+            return;
+        }
         sampleCount = samplesSinceLastPoll.getAndSet(0);
     }
 

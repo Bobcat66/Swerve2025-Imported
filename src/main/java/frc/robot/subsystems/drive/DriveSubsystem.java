@@ -1,18 +1,13 @@
 package frc.robot.subsystems.drive;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.apache.commons.lang3.function.TriConsumer;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -20,14 +15,13 @@ import org.littletonrobotics.junction.Logger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.DriveFeedforwards;
+
+import frc.robot.Constants.Akit;
 import frc.robot.Constants.DriveConstants.AutoConstants.PIDControl;
 import frc.robot.subsystems.Vision;
 
 import static frc.robot.Constants.DriveConstants.moduleTranslations;
 import static frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive.MaxModuleSpeed;
-
-import java.util.ArrayList;
 
 import static frc.robot.Constants.DriveConstants.AutoConstants.ppConfig;
 
@@ -143,6 +137,12 @@ public class DriveSubsystem extends SubsystemBase {
         
         //MUST BE CALLED BEFORE CONSUMING DATA FROM ODOMETRY THREAD
         OdometryThread.getInstance().poll();
+        
+        //Compile-time evaluation
+        if (Akit.currentMode == 1){
+            //This block will only compile when the code is running in a simulation
+            gyroIO.updateFromKinematics(getModuleStates(), kinematics);
+        }
 
         if (DriverStation.isDisabled()) {
             for (Module module : modules) {
@@ -184,6 +184,7 @@ public class DriveSubsystem extends SubsystemBase {
             }*/
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
+        
         if (gyroInputs.connected) {
             rawGyroRotation = gyroInputs.yawPosition;
         } else {
@@ -193,7 +194,7 @@ public class DriveSubsystem extends SubsystemBase {
         poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
-        //vision.updatePoseEstimator();
+        vision.updatePoseEstimator();
     }
 
     @Override

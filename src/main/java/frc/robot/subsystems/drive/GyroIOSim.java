@@ -5,33 +5,33 @@ import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.wpilibj.RobotController;
 
 public class GyroIOSim implements GyroIO {
 
     private Rotation2d simRotation = new Rotation2d();
+    private double velocityRadsPerSec = 0;
    
-    public GyroIOSim() {
-
-    }
+    public GyroIOSim() {}
 
     //initially updates the position once the gyro is connected
     @Override
     public void updateInputs(GyroIOInputs inputs) {
-        inputs.connected = false; //Drive Subsystem Odometry automatically calculates rotation 
+        inputs.connected = true;
         inputs.yawPosition = simRotation;
-        inputs.yawVelocityDegPerSec = 0.0; //Different from last year's code, check if works
+        inputs.yawVelocityDegPerSec = velocityRadsPerSec * (180/Math.PI);
+        inputs.odometryYawPositions = new Rotation2d[] {simRotation};
+        inputs.odometryYawTimestamps = new double[] {RobotController.getFPGATime()/1000000.0};
     }
 
     //calculates how much robot has rotated and adds it to where it previously was oriented
-    @Override
-    public void deriveGyro(SwerveModuleState[] swerveModuleStates, SwerveDriveKinematics kinematics){
-        //simRotation = simRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond * 0.02));
-        Logger.recordOutput("TEST/swerveModuleStates", swerveModuleStates);
-        Logger.recordOutput("TEST/simRotation", simRotation);
+    public void updateFromKinematics(SwerveModuleState[] swerveModuleStates, SwerveDriveKinematics kinematics){
+        velocityRadsPerSec = kinematics.toChassisSpeeds(swerveModuleStates).omegaRadiansPerSecond;
+        simRotation = simRotation.plus(Rotation2d.fromRadians(velocityRadsPerSec * 0.02));
     }
 
     @Override
     public void resetHeading() {
-
+        
     }    
 }
