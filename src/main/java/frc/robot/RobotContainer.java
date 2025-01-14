@@ -11,7 +11,9 @@ import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
 import frc.robot.subsystems.drive.DriveSubsystem;
 import frc.robot.subsystems.drive.GyroIOHardware;
+import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIOHardware;
+import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.commands.drive.DriveClosedLoopTeleop;
 import frc.robot.subsystems.Vision;
 
@@ -22,6 +24,7 @@ import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.math.MathUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -52,11 +55,11 @@ public class RobotContainer {
         }
 
         m_drive = new DriveSubsystem(
-            new GyroIOHardware(), 
-            new ModuleIOHardware(ModuleConfig.FrontLeft), 
-            new ModuleIOHardware(ModuleConfig.FrontRight), 
-            new ModuleIOHardware(ModuleConfig.RearRight),
-            new ModuleIOHardware(ModuleConfig.RearLeft),
+            new GyroIOSim(), 
+            new ModuleIOSim(ModuleConfig.FrontLeft), 
+            new ModuleIOSim(ModuleConfig.FrontRight), 
+            new ModuleIOSim(ModuleConfig.RearRight),
+            new ModuleIOSim(ModuleConfig.RearLeft),
             m_vision
         );
 
@@ -79,11 +82,15 @@ public class RobotContainer {
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
         m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
-            () -> m_driverController.getLeftY(),
-            () -> m_driverController.getLeftX(), 
-            () -> m_driverController.getRightX(), m_drive));
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
+            () -> m_driverController.rightBumper().getAsBoolean(),
+            () -> m_driverController.leftBumper().getAsBoolean(),
+            m_drive));
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
+
         m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
         m_driverController.a().whileTrue(new AutoBuilder.pathfindToPose(
             targetPose,
@@ -91,6 +98,7 @@ public class RobotContainer {
             0.0,
             0.0
         ));
+
     }
 
     /**

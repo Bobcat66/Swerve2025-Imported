@@ -43,7 +43,7 @@ public class Vision {
     //A Consumer that accepts a Pose3d and a Matrix of Standard Deviations, usually should call addVisionMeasurements() on a SwerveDrivePoseEstimator3d
     private TriConsumer<Pose2d,Double,Matrix<N3,N1>> measurementConsumer;
 
-    HashMap<String,CamStruct> Cameras; //Hashmap of cameras used for Localization
+    HashMap<String,CamStruct> Cameras = new HashMap<>(); //Hashmap of cameras used for Localization
 
     private Matrix<N3,N1> curStdDevs;
     

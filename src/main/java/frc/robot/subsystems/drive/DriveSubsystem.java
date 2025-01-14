@@ -1,18 +1,13 @@
 package frc.robot.subsystems.drive;
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.apache.commons.lang3.function.TriConsumer;
 
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -20,12 +15,14 @@ import org.littletonrobotics.junction.Logger;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.util.DriveFeedforwards;
+
+import frc.robot.Constants.Akit;
 import frc.robot.Constants.DriveConstants.AutoConstants.PIDControl;
 import frc.robot.subsystems.Vision;
 
 import static frc.robot.Constants.DriveConstants.moduleTranslations;
 import static frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive.MaxModuleSpeed;
+
 import static frc.robot.Constants.DriveConstants.AutoConstants.ppConfig;
 
 public class DriveSubsystem extends SubsystemBase {
@@ -54,6 +51,8 @@ public class DriveSubsystem extends SubsystemBase {
         Vision vision
     ){
 
+        OdometryThread.getInstance().start();
+
         vision.registerMeasurementConsumer(poseEstimator::addVisionMeasurement);
         this.vision = vision;
 
@@ -64,13 +63,11 @@ public class DriveSubsystem extends SubsystemBase {
         modules[3] = new Module(RRModuleIO, "RearRight");
         
 
-        OdometryThread.getInstance().start();
-
         AutoBuilder.configure(
             this::getPose,
             this::resetPose,
             this::getChassisSpeeds,
-            (ChassisSpeeds speeds, DriveFeedforwards ff) -> driveCLCO(speeds), //TODO: Implement drivefeedforwards
+            this::driveCO,
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -110,20 +107,29 @@ public class DriveSubsystem extends SubsystemBase {
         poseEstimator.resetPosition(rawGyroRotation,getModulePositions(),newPose);
     }
 
-    /**Chassis-oriented Closed-Loop driving*/
-    public void driveCLCO(ChassisSpeeds speeds){
-        ChassisSpeeds discSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
-        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discSpeeds);
+    /**Field-oriented Closed-Loop driving*/
+    public void driveFO(ChassisSpeeds speeds){
+        speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rawGyroRotation);
+        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(setpointStates[i]);
         }
+        SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
         Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+        Logger.recordOutput("SwerveStates/Actual", actualStates);
     }
 
-    /**Field-oriented Closed-loop driving */
-    public void driveCLFO(ChassisSpeeds speeds){
-
+    /** Chassis-oriented Closed-loop driving */
+    public void driveCO(ChassisSpeeds speeds) {
+        SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
+        SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
+        for (int i = 0; i < 4; i++) {
+            modules[i].setDesiredState(setpointStates[i]);
+        }
+        SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
+        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+        Logger.recordOutput("SwerveStates/Actual", actualStates);
     }
 
     @Override
@@ -131,6 +137,12 @@ public class DriveSubsystem extends SubsystemBase {
         
         //MUST BE CALLED BEFORE CONSUMING DATA FROM ODOMETRY THREAD
         OdometryThread.getInstance().poll();
+        
+        //Compile-time evaluation
+        if (Akit.currentMode == 1){
+            //This block will only compile when the code is running in a simulation
+            gyroIO.updateFromKinematics(getModuleStates(), kinematics);
+        }
 
         if (DriverStation.isDisabled()) {
             for (Module module : modules) {
@@ -149,17 +161,19 @@ public class DriveSubsystem extends SubsystemBase {
 
         //Update odometry
         double[] sampleTimestamps = modules[0].getOdometryTimestamps();
-        int sampleCount = sampleTimestamps.length;
+        int sampleCount = OdometryThread.getInstance().sampleCount;
         for (int i = 0; i < sampleCount; i++){
             SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
             SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
             for (int modIndex = 0; modIndex < 4; modIndex++){
+            
                 modulePositions[modIndex] = modules[modIndex].getOdometryModulePositions()[i];
                 moduleDeltas[modIndex] = new SwerveModulePosition(
                     modulePositions[modIndex].distanceMeters - lastModulePositions[modIndex].distanceMeters,
                     modulePositions[modIndex].angle);
                 lastModulePositions[modIndex] = modulePositions[modIndex];
             }
+            /*
             if (gyroInputs.connected) {
                 // Use the real gyro angle
                 rawGyroRotation = gyroInputs.odometryYawPositions[i];
@@ -167,13 +181,25 @@ public class DriveSubsystem extends SubsystemBase {
                 // Use the angle delta from the kinematics and module deltas
                 Twist2d twist = kinematics.toTwist2d(moduleDeltas);
                 rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
-            }
+            }*/
             poseEstimator.updateWithTime(sampleTimestamps[i],rawGyroRotation,modulePositions);
         }
-        rawGyroRotation = gyroInputs.yawPosition;
+        
+        if (gyroInputs.connected) {
+            rawGyroRotation = gyroInputs.yawPosition;
+        } else {
+            rawGyroRotation = rawGyroRotation.plus(Rotation2d.fromRadians(kinematics.toChassisSpeeds(getModuleStates()).omegaRadiansPerSecond * 0.02));
+        }
+
+        poseEstimator.update(rawGyroRotation, getModulePositions());
 
         //Updates internal pose estimator with vision readings
         vision.updatePoseEstimator();
+    }
+
+    @Override
+    public void simulationPeriodic(){
+        
     }
 
     /** Returns the module positions (turn angles and drive positions) for all of the modules. */

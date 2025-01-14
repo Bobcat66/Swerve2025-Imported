@@ -83,5 +83,6 @@ public class Module {
         for (int i = 0; i < sampleCount; i++){
             odometryModulePositions[i] = new SwerveModulePosition(inputs.odometryDrivePositionsMeters[i],inputs.odometryTurnPositions[i]);
         }
+        //System.out.println("ODOM " + odometryModulePositions.length);
     }
 }

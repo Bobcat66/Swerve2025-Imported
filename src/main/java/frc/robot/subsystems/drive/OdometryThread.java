@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import frc.robot.Constants.Akit;
 
 import static frc.robot.Constants.DriveConstants.odometryFrequencyHz;
 
@@ -48,6 +49,14 @@ public class OdometryThread {
     }
 
     public void start(){
+
+        //Compile-time evaluation
+        if (Akit.currentMode == 1) {
+            //Running simulation, disable odometry thread
+            sampleCount = 1;
+            return;
+        }
+        
         notifier.startPeriodic(1.0/odometryFrequencyHz);
     }
 
@@ -102,6 +111,10 @@ public class OdometryThread {
 
     /** This method should be called ONCE per main-cycle thread */
     public void poll() {
+        if (Akit.currentMode == 1){
+            //Disables polling during simulation
+            return;
+        }
         sampleCount = samplesSinceLastPoll.getAndSet(0);
     }
 

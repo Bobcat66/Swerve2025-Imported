@@ -1,6 +1,9 @@
 package frc.robot.subsystems.drive;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+
 import org.littletonrobotics.junction.AutoLog;
 
 public interface GyroIO {
@@ -14,7 +17,10 @@ public interface GyroIO {
         public Rotation2d[] odometryYawPositions = new Rotation2d[] {};
     }
 
-    /** Updates inputs with regular data */
     public abstract void updateInputs(GyroIOInputs inputs);
 
+    public default void resetHeading() {} 
+
+    /** Updates IOLayer's internal state from kinematics (FOR SIM ONLY)*/
+    public default void updateFromKinematics(SwerveModuleState[] swerveModuleStates, SwerveDriveKinematics kinematics) {}
 }
