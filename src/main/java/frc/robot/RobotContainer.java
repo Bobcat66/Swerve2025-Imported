@@ -77,7 +77,7 @@ public class RobotContainer {
     */
     private void configureBindings() {
         Pose2d targetPose = new Pose2d(m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
-        PathConstraints constraints = new PathConstraints(null, null, null, null);
+        PathConstraints constraints = new PathConstraints(50, 500, 500, 500);
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
@@ -90,12 +90,12 @@ public class RobotContainer {
             m_drive));
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
+        // System.out.println(m_vision.getClosestAprilTagIndex(m_drive.getPose().getX(), m_drive.getPose().getY()));
 
         m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
-        m_driverController.a().whileTrue(new AutoBuilder.pathfindToPose(
+        m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
             targetPose,
             constraints,
-            0.0,
             0.0
         ));
 

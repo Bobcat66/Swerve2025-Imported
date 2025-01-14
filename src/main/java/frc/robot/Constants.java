@@ -68,12 +68,7 @@ public final class Constants {
             public static final Matrix<N3, N1> kSingleTagDefaultStdDevs = VecBuilder.fill(4, 4, 8);
             public static final Matrix<N3, N1> kMultiTagDefaultStdDevs = VecBuilder.fill(0.5, 0.5, 1);
         }
-
-    public static class Akit {
-        //0 = real, 1 = Sim, 2 = replay
-        //If statements that evaluate this constant expression are used to implement C-style 
-        public static final int currentMode = 1;
-    }
+    
       
         /**
          * @description Provides coordinates for april tags
@@ -147,6 +142,13 @@ public final class Constants {
             };
         }
     }
+
+    public static class Akit {
+        //0 = real, 1 = Sim, 2 = replay
+        //If statements that evaluate this constant expression are used to implement C-style 
+        public static final int currentMode = 1;
+    }
+
 
     public static class DriveConstants {
         public static final int odometryFrequencyHz = 250;
@@ -272,3 +274,4 @@ public final class Constants {
         }
     }
 }
+
