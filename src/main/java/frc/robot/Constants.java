@@ -10,6 +10,8 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
 
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -69,84 +71,51 @@ public final class Constants {
             public static final Matrix<N3, N1> kMultiTagDefaultStdDevs = VecBuilder.fill(0.5, 0.5, 1);
         }
 
+        /**
+         * @description Provides coordinates for april tags
+         * @description See https://docs.google.com/spreadsheets/d/1mz5djBDrFm8Ro_M04Yq4eea92x4Xyj_pqlt54wsXnxA/edit?usp=sharing
+         */
+        public enum ReefFace {
+
+            //Blue Reef
+            BLU_REEF_CD(17, 4.073906, 3.306318, 240.0, 3.930, 3.400, 4.210, 3.200),
+            BLU_REEF_AB(18, 3.657600, 4.025900, 180.0, 3.658, 4.180, 3.658, 3.860),
+            BLU_REEF_LK(19, 4.073906, 4.745482, 120.0, 4.190, 4.850, 3.920, 4.670),
+            BLU_REEF_JI(20, 4.904740, 4.745482, 60.0, 5.060, 4.690, 4.780, 4.840),
+            BLU_REEF_HG(21, 5.321046, 4.025900, 0.0, 5.321, 3.850, 5.321, 4.170),
+            BLU_REEF_EF(22, 4.904740, 3.306318, 300.0, 4.780, 3.220, 5.060, 3.340),
+
+            //Red Reef
+            RED_REEF_KL(6, 13.474446, 3.306318, 300.0, 15.350, 3.210, 13.640, 3.340),
+            RED_REEF_BA(7, 13.890498, 4.025900, 0.0, 13.910, 3.860, 13.910, 4.190),
+            RED_REEF_DC(8, 13.474446, 4.745482, 60.0, 13.640, 4.690, 13.360, 4.830),
+            RED_REEF_FE(9, 12.643358, 4.745482, 120.0, 12.780, 4.830, 12.510, 4.680),
+            RED_REEF_GH(10, 12.227306, 4.025900, 180.0, 12.220, 4.190, 12.220, 3.850),
+            RED_REEF_IJ(11, 12.643358, 3.306318, 240.0, 12.490, 3.360, 12.790, 3.210);
+        
+
+            public final Translation2d leftBranch;
+            public final Translation2d rightBranch;
+            public final Pose2d AprilTag;
+            public final int AprilTagID;
+        
+            private ReefFace(int AprilTagID, double AT_x, double AT_y, double AT_theta, double L_x, double L_y, double R_x, double R_y) {
+                this.AprilTagID = AprilTagID;
+                this.AprilTag = new Pose2d(AT_x, AT_y, Rotation2d.fromDegrees(AT_theta));
+                this.leftBranch = new Translation2d(L_x, L_y);
+                this.rightBranch = new Translation2d(R_x, R_y);
+            }
+        }
+    }
+    
+
     public static class Akit {
         //0 = real, 1 = Sim, 2 = replay
         //If statements that evaluate this constant expression are used to implement C-style 
         public static final int currentMode = 1;
     }
       
-        /**
-         * @description Provides coordinates for april tags
-         * @description See https://docs.google.com/spreadsheets/d/1mz5djBDrFm8Ro_M04Yq4eea92x4Xyj_pqlt54wsXnxA/edit?usp=sharing
-         */
-        public static class Coordinates {
-            public static final double[][] reefAprilCoordinates = new double[][]{
-                    {4.073906, 3.306318}, // 17
-                    {3.6576, 4.0259}, // 18
-                    {4.073906, 4.745482}, // 19
-                    {4.90474, 4.74582}, // 20
-                    {5.321046, 4.0259}, // 21
-                    {4.90474, 3.306318}, // 22 - Sect 1 (BLUE) ends on sheet
-                    {13.474446, 3.306318}, // 6
-                    {13.890498, 4.0259}, // 7
-                    {13.474446, 4.745482}, // 8
-                    {12.643358, 4.745482}, // 9
-                    {12.227306, 4.0259}, // 10
-                    {12.643358, 3.306318} // 11 - Sect 2 (RED) ends
-            };
-
-            public static final double[] reefAprilAngles = new double[]{
-                240, // 17
-                180, // 18
-                120, // 19
-                60, // 20
-                0, // 21
-                300, // 22
-                300, // 6
-                0, // 7
-                60, // 8
-                120, // 9
-                180, // 10
-                240 // 11
-            };
-            
-            /**
-             * Coordinates of the left branches on the reef, with indexes that correspond to those of reefAprilCoordinates.
-             */
-            public static final double[][] reefLeftBranchCoordinates = new double[][]{
-                {3.93, 3.4}, // 17 
-                {3.658, 4.18}, // 18 
-                {4.19, 4.85}, // 19 
-                {5.06, 4.69}, // 20 
-                {5.321, 3.85}, // 21 
-                {4.78, 3.22}, // 22 
-                {15.35, 3.21}, // 6 
-                {13.91, 3.86}, // 7 
-                {13.64, 4.69}, // 8 
-                {12.78, 4.83}, // 9 
-                {12.22, 4.19}, // 10 
-                {12.49, 3.36} // 11
-            };
-            
-            /**
-             * Coordinates of the right branches on the reef, with indexes that correspond to those of reefAprilCoordinates
-             */
-            public static final double[][] reefRightBranchCoordinates = new double[][]{
-                {4.21, 3.2}, // 17 
-                {3.658, 3.86}, // 18 
-                {3.92, 4.67}, // 19 
-                {4.78, 4.84}, // 20 
-                {5.321, 4.17}, // 21 
-                {5.06, 3.34}, // 22 
-                {13.64, 3.34}, // 6 
-                {13.91, 4.19}, // 7 
-                {13.36, 4.83}, // 8 
-                {12.51, 4.68}, // 9 
-                {12.22, 3.85}, // 10
-                {12.79, 3.21} // 11
-            };
-        }
-    }
+    
 
     public static class DriveConstants {
         public static final int odometryFrequencyHz = 250;
