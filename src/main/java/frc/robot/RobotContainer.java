@@ -14,6 +14,7 @@ import frc.robot.subsystems.drive.GyroIOHardware;
 import frc.robot.subsystems.drive.GyroIOSim;
 import frc.robot.subsystems.drive.ModuleIOHardware;
 import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.utils.Localization;
 import frc.robot.commands.drive.DriveClosedLoopTeleop;
 import frc.robot.subsystems.Vision;
 
@@ -76,11 +77,12 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
-        Pose2d targetPose = new Pose2d(m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
+        Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
         PathConstraints constraints = new PathConstraints(null, null, null, null);
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
+
         m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
             () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
             () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
