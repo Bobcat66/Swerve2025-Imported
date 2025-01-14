@@ -21,6 +21,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.Constants.VisionConstants.CamConfig;
 import static frc.robot.Constants.VisionConstants.Coordinates.reefAprilCoordinates;
+import static frc.robot.Constants.VisionConstants.Coordinates.reefLeftBranchCoordinates;
+import static frc.robot.Constants.VisionConstants.Coordinates.reefRightBranchCoordinates;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kFallbackStrategy;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
 import static frc.robot.Constants.VisionConstants.PhotonVision.kMultiTagDefaultStdDevs;
@@ -124,14 +126,13 @@ public class Vision {
     }
 
     /**
-     * @author Knivier
      * @param robotX
      * @param robotY
-     * @return Coordinates of the closest april tag
+     * @return Index of the closest april tag
      */
-    public double[] closestAprilTag(int robotX, int robotY){
+    public int getClosestAprilTagIndex(double robotX, double robotY){
         double tempMinDistance = -1; // Distance away from april tag
-        double aprilCoordinates[] = new double[2];
+        int aprilIndex = -1; // index of that april tag
 
 
         for (int i = 0; i < reefAprilCoordinates.length; i++){
@@ -141,24 +142,43 @@ public class Vision {
             double distance = Math.sqrt(Math.pow(aprilX - robotX, 2) + Math.pow(aprilY - robotY, 2));
             if (tempMinDistance == -1 || distance < tempMinDistance) {
                 tempMinDistance = distance;
-                aprilCoordinates[0] = aprilX;
-                aprilCoordinates[1] = aprilY;
+                aprilIndex = i;
             }
         }
-        return aprilCoordinates; //yay
+        return aprilIndex; //yay
+    }
+    
+    /**
+     * @param robotX x-pose of the robot
+     * @param robotY y-pose of the robot
+     * @return The coordinates of the closest AprilTag
+     */
+    public double[] getClosestAprilTagCoordinates(double robotX, double robotY) {
+        int index = getClosestAprilTagIndex(robotX, robotY);
+        double coords[] = reefAprilCoordinates[index];
+        return coords;
     }
 
-
-    public double[] leftCoordinateCentering(double x, double y){
-        
-        
-        return null;
+    /**
+     * @param robotX x-pose of the robot
+     * @param robotY y-pose of the robot
+     * @return The location of the branch to the left of the nearest reef April Tag.
+     */
+    public double[] getClosestLeftBranchCoordinates(double robotX, double robotY){
+        int index = getClosestAprilTagIndex(robotX, robotY);
+        double coords[] = reefLeftBranchCoordinates[index];
+        return coords;
     }
 
-    public double[] rightCoordinateCentering(double x, double y){
-
-        return null;
+    /**
+     * @author Tejas Gupta
+     * @param robotX x-pose of the robot
+     * @param robotY y-pose of the robot
+     * @return The location of the branch to the right of the nearest reef April Tag
+     */
+    public double[] getClosestRightBranchCoordinate(double robotX, double robotY){
+        int index = getClosestAprilTagIndex(robotX, robotY);
+        double coords[] = reefRightBranchCoordinates[index];
+        return coords;
     }
-
-
 }

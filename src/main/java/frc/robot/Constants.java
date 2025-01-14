@@ -4,8 +4,6 @@
 
 package frc.robot;
 
-import static frc.robot.Constants.DriveConstants.ModuleConstants.Common.Drive.WheelRadius;
-
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import com.pathplanner.lib.config.ModuleConfig;
@@ -70,154 +68,185 @@ public final class Constants {
         }
 
         /**
-         * @author Knivier
          * @description Provides coordinates for april tags
-         * @description See https://docs.google.com/spreadsheets/d/1Av8BR9JlQeEoLwIn7KNyb3VgK5JVorWvDeGdq4DshHk/edit?gid=0#gid=0
+         * @description See https://docs.google.com/spreadsheets/d/1mz5djBDrFm8Ro_M04Yq4eea92x4Xyj_pqlt54wsXnxA/edit?usp=sharing
          */
         public static class Coordinates {
             public static final double[][] reefAprilCoordinates = new double[][]{
-                    {4.073906, 3.306318},
-                    {3.6576, 4.0259},
-                    {4.073906, 4.745482},
-                    {4.90474, 4.74582},
-                    {5.321046, 4.0259},
-                    {4.90474, 3.306318}, // Sect 1 (BLUE) ends on sheet
-                    {13.474446, 3.306318},
-                    {13.890498, 4.0259},
-                    {13.474446, 4.745482},
-                    {12.643358, 4.745482},
-                    {12.227306, 4.0259},
-                    {12.643358, 3.306318} // Sect 2 (RED) ends
+                    {4.073906, 3.306318}, // 17
+                    {3.6576, 4.0259}, // 18
+                    {4.073906, 4.745482}, // 19
+                    {4.90474, 4.74582}, // 20
+                    {5.321046, 4.0259}, // 21
+                    {4.90474, 3.306318}, // 22 - Sect 1 (BLUE) ends on sheet
+                    {13.474446, 3.306318}, // 6
+                    {13.890498, 4.0259}, // 7
+                    {13.474446, 4.745482}, // 8
+                    {12.643358, 4.745482}, // 9
+                    {12.227306, 4.0259}, // 10
+                    {12.643358, 3.306318} // 11 - Sect 2 (RED) ends
             };
 
             public static final double[] reefAprilAngles = new double[]{
-                240,
-                180,
-                120,
-                60,
-                0,
-                300,
-                300,
-                0,
-                60,
-                120,
-                180,
-                240
-        };
-
-            public static final double[][] REEF_LEFT_BRANCH_COORDINATES = new double[][]{
-                {0.0, 0.0} // Empty, find later BY THE ORDER OF THE SHEET
+                240, // 17
+                180, // 18
+                120, // 19
+                60, // 20
+                0, // 21
+                300, // 22
+                300, // 6
+                0, // 7
+                60, // 8
+                120, // 9
+                180, // 10
+                240 // 11
             };
-            public static final double[][] REEF_RIGHT_BRANCH_COORDINATES = new double[][]{
-                {0.0, 0.0} // Empty, find later BY THE ORDER OF THE SHEET
+            
+            /**
+             * Coordinates of the left branches on the reef, with indexes that correspond to those of reefAprilCoordinates.
+             */
+            public static final double[][] reefLeftBranchCoordinates = new double[][]{
+                {3.93, 3.4}, // 17 
+                {3.658, 4.18}, // 18 
+                {4.19, 4.85}, // 19 
+                {5.06, 4.69}, // 20 
+                {5.321, 3.85}, // 21 
+                {4.78, 3.22}, // 22 
+                {15.35, 3.21}, // 6 
+                {13.91, 3.86}, // 7 
+                {13.64, 4.69}, // 8 
+                {12.78, 4.83}, // 9 
+                {12.22, 4.19}, // 10 
+                {12.49, 3.36} // 11
+            };
+            
+            /**
+             * Coordinates of the right branches on the reef, with indexes that correspond to those of reefAprilCoordinates
+             */
+            public static final double[][] reefRightBranchCoordinates = new double[][]{
+                {4.21, 3.2}, // 17 
+                {3.658, 3.86}, // 18 
+                {3.92, 4.67}, // 19 
+                {4.78, 4.84}, // 20 
+                {5.321, 4.17}, // 21 
+                {5.06, 3.34}, // 22 
+                {13.64, 3.34}, // 6 
+                {13.91, 4.19}, // 7 
+                {13.36, 4.83}, // 8 
+                {12.51, 4.68}, // 9 
+                {12.22, 3.85}, // 10
+                {12.79, 3.21} // 11
             };
         }
 
         public static class Akit {
             public static final int currentMode = 0;
         }
+    }
 
-        public static class DriveConstants {
-            public static final int odometryFrequencyHz = 250;
-            public static final double wheelBase = Units.inchesToMeters(27.5); //Meters
-            public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
-            //public static final double wheelRadius = 0.0508; //Meters
-            public static final Translation2d[] moduleTranslations = new Translation2d[]{
-                    new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
-                    new Translation2d(trackWidth / 2.0, -wheelBase / 2.0),
-                    new Translation2d(-trackWidth / 2.0, wheelBase / 2.0),
-                    new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0)
-            };
+    public static class DriveConstants {
+        public static final int odometryFrequencyHz = 250;
+        public static final double wheelBase = Units.inchesToMeters(27.5); //Meters
+        public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
+        //public static final double wheelRadius = 0.0508; //Meters
+        public static final Translation2d[] moduleTranslations = new Translation2d[]{
+                new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
+                new Translation2d(trackWidth / 2.0, -wheelBase / 2.0),
+                new Translation2d(-trackWidth / 2.0, wheelBase / 2.0),
+                new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0)
+        };
 
-            public static class GyroConstants {
-                public static final int kGyroPort = 9;
+        public static class GyroConstants {
+            public static final int kGyroPort = 9;
+        }
+
+        public static class AutoConstants {
+            public static final RobotConfig ppConfig = new RobotConfig(
+                    100.0,
+                    1.0,
+                    new ModuleConfig(
+                            ModuleConstants.Common.Drive.WheelRadius,
+                            ModuleConstants.Common.Drive.MaxModuleSpeed,
+                            ModuleConstants.Common.Drive.WheelCOF,
+                            DCMotor.getNEO(1),
+                            ModuleConstants.Common.Drive.CurrentLimit,
+                            1
+                    ),
+                    moduleTranslations
+            );
+
+            public static class PIDControl {
+                public static class Trans {
+                    public static final double kP = 5.0;
+                    public static final double kI = 0.0;
+                    public static final double kD = 0.0;
+                }
+
+                public static class Rot {
+                    public static final double kP = 5.0;
+                    public static final double kI = 0.0;
+                    public static final double kD = 0.0;
+                }
             }
+        }
 
-            public static class AutoConstants {
-                public static final RobotConfig ppConfig = new RobotConfig(
-                        100.0,
-                        1.0,
-                        new ModuleConfig(
-                                ModuleConstants.Common.Drive.WheelRadius,
-                                ModuleConstants.Common.Drive.MaxModuleSpeed,
-                                ModuleConstants.Common.Drive.WheelCOF,
-                                DCMotor.getNEO(1),
-                                ModuleConstants.Common.Drive.CurrentLimit,
-                                1
-                        ),
-                        moduleTranslations
-                );
+        public static class ModuleConstants {
+            public static class Common {
+                public static class Drive {
+                    public static final int CurrentLimit = 60;
+                    public static final double gearRatio = 6.75;
+                    public static final double VoltageCompensation = 12;
+                    public static final double MaxModuleSpeed = 14.0; // Maximum attainable module speed
+                    public static final double WheelRadius = Units.inchesToMeters(4); // Meters
+                    public static final double WheelCOF = 1.0; // Coefficient of friction
+                    public static final double PositionConversionFactor = 2 * WheelRadius * Math.PI / gearRatio; // Units:
+                                                                                                                 // Meters
+                    public static final double VelocityConversionFactor = PositionConversionFactor / 60; // Units:
+                                                                                                         // Meters per
+                                                                                                         // second
 
-                public static class PIDControl {
-                    public static class Trans {
-                        public static final double kP = 5.0;
-                        public static final double kI = 0.0;
-                        public static final double kD = 0.0;
-                    }
+                    // PID constants
+                    public static final double kP = 0.035;
+                    public static final double kI = 0.000;
+                    public static final double kD = 0.0012;
 
-                    public static class Rot {
-                        public static final double kP = 5.0;
-                        public static final double kI = 0.0;
-                        public static final double kD = 0.0;
-                    }
+                    // Feedforward constants
+                    public static final double kV = 2.78;
+                    public static final double kS = 0.0;
+                    public static final double kA = 0.0;
+                }
+
+                public static class Turn {
+                    public static final int CurrentLimit = 60;
+                    public static final double VoltageCompensation = 12;
+                    public static final double gearRatio = 12.8;
+                    public static final double PositionConversionFactor = 1 / gearRatio; // Units: Rotations
+                    public static final double VelocityConversionFactor = PositionConversionFactor; // Units: RPM
+
+                    // PID constants
+                    public static double kP = 0.75;
+                    public static final double kI = 0.0;
+                    public static final double kD = 0.0001;
                 }
             }
 
-            public static class ModuleConstants {
-                public static class Common {
-                    public static class Drive {
-                        public static final int CurrentLimit = 60;
-                        public static final double gearRatio = 6.75;
-                        public static final double VoltageCompensation = 12;
-                        public static final double MaxModuleSpeed = 14.0; //Maximum attainable module speed
-                        public static final double WheelRadius = Units.inchesToMeters(4); //Meters
-                        public static final double WheelCOF = 1.0; //Coefficient of friction
-                        public static final double PositionConversionFactor = 2 * WheelRadius * Math.PI / gearRatio; //Units: Meters
-                        public static final double VelocityConversionFactor = PositionConversionFactor / 60; //Units: Meters per second
+            public static enum ModuleConfig {
 
-                        //PID constants
-                        public static final double kP = 0.035;
-                        public static final double kI = 0.000;
-                        public static final double kD = 0.0012;
+                FrontLeft(1, 11, 21, -0.441162109375 + 0.5),
+                FrontRight(2, 12, 22, -0.3984375 + 0.5),
+                RearLeft(3, 13, 23, -0.525146484375),
+                RearRight(4, 14, 24, -0.931396484375);
 
-                        //Feedforward constants
-                        public static final double kV = 2.78;
-                        public static final double kS = 0.0;
-                        public static final double kA = 0.0;
-                    }
+                public final int DrivePort;
+                public final int TurnPort;
+                public final int EncoderPort;
+                public final double EncoderOffsetRots;
 
-                    public static class Turn {
-                        public static final int CurrentLimit = 60;
-                        public static final double VoltageCompensation = 12;
-                        public static final double gearRatio = 12.8;
-                        public static final double PositionConversionFactor = 1 / gearRatio; //Units: Rotations
-                        public static final double VelocityConversionFactor = PositionConversionFactor; //Units: RPM
-
-                        //PID constants
-                        public static double kP = 0.75;
-                        public static final double kI = 0.0;
-                        public static final double kD = 0.0001;
-                    }
-                }
-
-                public static enum ModuleConfig {
-
-                    FrontLeft(1, 11, 21, -0.441162109375 + 0.5),
-                    FrontRight(2, 12, 22, -0.3984375 + 0.5),
-                    RearLeft(3, 13, 23, -0.525146484375),
-                    RearRight(4, 14, 24, -0.931396484375);
-
-                    public final int DrivePort;
-                    public final int TurnPort;
-                    public final int EncoderPort;
-                    public final double EncoderOffsetRots;
-
-                    private ModuleConfig(int DrivePort, int TurnPort, int EncoderPort, double EncoderOffsetRots) {
-                        this.DrivePort = DrivePort;
-                        this.TurnPort = TurnPort;
-                        this.EncoderPort = EncoderPort;
-                        this.EncoderOffsetRots = EncoderOffsetRots;
-                    }
+                private ModuleConfig(int DrivePort, int TurnPort, int EncoderPort, double EncoderOffsetRots) {
+                    this.DrivePort = DrivePort;
+                    this.TurnPort = TurnPort;
+                    this.EncoderPort = EncoderPort;
+                    this.EncoderOffsetRots = EncoderOffsetRots;
                 }
             }
         }
