@@ -85,7 +85,7 @@ public class RobotContainer {
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
         m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
-        m_driverController.a().whileTrue(new AutoBuilder.pathfindToPose(
+        m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
             targetPose,
             constraints,
             0.0,
