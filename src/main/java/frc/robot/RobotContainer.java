@@ -16,12 +16,18 @@ import frc.robot.subsystems.drive.ModuleIOHardware;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.commands.drive.DriveClosedLoopTeleop;
 import frc.robot.subsystems.Vision;
+
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Pose2d;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -70,6 +76,8 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
+        Pose2d targetPose = new Pose2d(m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
+        PathConstraints constraints = new PathConstraints(null, null, null, null);
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
@@ -82,6 +90,15 @@ public class RobotContainer {
             m_drive));
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
+
+        m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
+        m_driverController.a().whileTrue(new AutoBuilder.pathfindToPose(
+            targetPose,
+            constraints,
+            0.0,
+            0.0
+        ));
+
     }
 
     /**
