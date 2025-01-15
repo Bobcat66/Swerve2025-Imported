@@ -30,6 +30,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -61,6 +62,7 @@ public class Robot extends LoggedRobot {
         System.out.println("Initializing Tomfoolery (NOTE: THIS IS FOR DEBUGGING ONLY, SOMETHING HAS GONE SERIOUSLY WRONG IF YOU'RE READING THIS AT A COMPETITION)");
         System.out.println("Exposing IterativeRobotBase private fields");
         for (Field field : IterativeRobotBase.class.getDeclaredFields()){
+            if (Modifier.isPublic(field.getModifiers())) {continue;} //Skips all public fields
             System.out.println("IterativeRobotBase$" + field.getName());
             field.setAccessible(true);
             reflectedFields.put("IterativeRobotBase$" + field.getName(),field);
@@ -73,12 +75,14 @@ public class Robot extends LoggedRobot {
         }
         System.out.println("Exposing CommandScheduler private fields");
         for (Field field : CommandScheduler.class.getDeclaredFields()){
+            if (Modifier.isPublic(field.getModifiers())) {continue;} //Skips all public fields
             System.out.println("CommandScheduler$" + field.getName());
             field.setAccessible(true);
             reflectedFields.put("CommandScheduler$" + field.getName(),field);
         }
         System.out.println("Exposing CommandScheduler private methods");
         for (Method method : CommandScheduler.class.getDeclaredMethods()){
+            if (Modifier.isPublic(method.getModifiers())) {continue;} //Skips all public methods
             System.out.println("CommandScheduler$" + method.getName());
             method.setAccessible(true);
             reflectedMethods.put("CommandScheduler$" + method.getName(),method);
@@ -157,9 +161,12 @@ public class Robot extends LoggedRobot {
             ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).reset();
 
             // Run the periodic method of all registered subsystems.
+            System.out.println("Running subsystem periodic methods");
             for (Subsystem subsystem : ((Map<Subsystem, Command>)reflectedFields.get("CommandScheduler$m_subsystems").get(CommandScheduler.getInstance())).keySet()) {
+                System.out.println("Running periodic method of subsystem " + subsystem);
                 subsystem.periodic();
                 if (RobotBase.isSimulation()) {
+                    System.out.println("Running sim periodic method of subsystem " + subsystem);
                     subsystem.simulationPeriodic();
                 }
                 ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).addEpoch(subsystem.getName() + ".periodic()");
@@ -179,9 +186,12 @@ public class Robot extends LoggedRobot {
                 Command command = iterator.next();
 
                 if (isDisabled && !command.runsWhenDisabled()) {
+                    System.out.println(reflectedMethods.get("CommandScheduler$cancel").getParameterCount());
                     reflectedMethods.get("CommandScheduler$cancel").invoke(CommandScheduler.getInstance(),command,((Optional<Command>)reflectedFields.get("CommandScheduler$kNoInterruptor").get(CommandScheduler.getInstance())));
                     continue;
                 }
+
+
                 System.out.println("Executing Command " + command);
                 command.execute();
                 for (Consumer<Command> action : (List<Consumer<Command>>)reflectedFields.get("CommandScheduler$m_executeActions").get(CommandScheduler.getInstance())) {
@@ -205,10 +215,12 @@ public class Robot extends LoggedRobot {
 
             // Schedule/cancel commands from queues populated during loop
             for (Command command : (Set<Command>)reflectedFields.get("CommandScheduler$m_toSchedule").get(CommandScheduler.getInstance())) {
+                System.out.println("Scheduling queued command " + command);
                 CommandScheduler.getInstance().schedule(command);
             }
 
             for (int i = 0; i < ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).size(); i++) {
+                System.out.println("Cancelling command " + ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).get(i));
                 reflectedMethods.get("CommandScheduler$cancel").invoke(
                     CommandScheduler.getInstance(),
                     ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).get(i),
@@ -224,6 +236,7 @@ public class Robot extends LoggedRobot {
             for (Map.Entry<Subsystem, Command> subsystemCommand : ((Map<Subsystem, Command>)reflectedFields.get("CommandScheduler$m_subsystems").get(CommandScheduler.getInstance())).entrySet()) {
                 if (!((Map<Subsystem,Command>)reflectedFields.get("CommandScheduler$m_requirements").get(CommandScheduler.getInstance())).containsKey(subsystemCommand.getKey())
                     && subsystemCommand.getValue() != null) {
+                    System.out.println("Scheduling subsystem " + subsystemCommand.getKey() + " default command " + subsystemCommand.getValue());
                     CommandScheduler.getInstance().schedule(subsystemCommand.getValue());
                 }
             }
