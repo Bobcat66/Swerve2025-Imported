@@ -19,7 +19,7 @@ public final class Localization {
      * @return the closest Reef Face
      */
     public static ReefFace getClosestReefFace(Pose2d robotPose){
-        double closestDistance = -1; // Distance away from april tag
+        double closestDistance = Double.MAX_VALUE; // Distance away from april tag
         ReefFace closestFace = null;
 
         for (ReefFace face: ReefFace.values()){
@@ -50,7 +50,7 @@ public final class Localization {
     @Deprecated
     public static int getClosestAprilTagIndex(double robotX, double robotY){
 
-        double tempMinDistance = -1; // Distance away from april tag
+        double tempMinDistance = Double.MAX_VALUE; // Distance away from april tag
         int aprilIndex = -1; // index of that april tag
 
         for (ReefFace face: ReefFace.values()){

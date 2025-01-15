@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import frc.robot.Constants.Akit;
 import frc.robot.Constants.OIConstants;
 import frc.robot.Constants.DriveConstants.ModuleConstants.ModuleConfig;
 import frc.robot.Constants.VisionConstants.CamConfig;
@@ -17,6 +18,11 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.utils.Localization;
 import frc.robot.commands.drive.DriveClosedLoopTeleop;
 import frc.robot.subsystems.Vision;
+
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
@@ -49,10 +55,13 @@ public class RobotContainer {
         new CommandXboxController(OIConstants.Driver.kDriverControllerPort);
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
+    @SuppressWarnings("unused")
     public RobotContainer() {
         // Configure the trigger bindings
-        for (CamConfig config : CamConfig.values()) {
-            m_vision.addCamera(config);
+        if (Akit.currentMode == 0){
+            for (CamConfig config : CamConfig.values()) {
+                m_vision.addCamera(config);
+            }
         }
 
         m_drive = new DriveSubsystem(
@@ -77,8 +86,10 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
+        //TODO: Fix this
         Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
-        PathConstraints constraints = new PathConstraints(null, null, null, null);
+
+        PathConstraints constraints = new PathConstraints(MetersPerSecond.of(5), MetersPerSecondPerSecond.of(5), RadiansPerSecond.of(5), RadiansPerSecondPerSecond.of(5));
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
@@ -94,10 +105,9 @@ public class RobotContainer {
             // cancelling on release.
 
         m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
-        m_driverController.a().whileTrue(new AutoBuilder.pathfindToPose(
+        m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
             targetPose,
             constraints,
-            0.0,
             0.0
         ));
 
