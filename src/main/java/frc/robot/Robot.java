@@ -8,6 +8,11 @@ import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.controllers.PathFollowingController;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.DriverStationJNI;
@@ -86,6 +91,13 @@ public class Robot extends LoggedRobot {
             System.out.println("CommandScheduler$" + method.getName());
             method.setAccessible(true);
             reflectedMethods.put("CommandScheduler$" + method.getName(),method);
+        }
+        System.out.println("Exposing FollowPathCommand private fields");
+        for (Field field : FollowPathCommand.class.getDeclaredFields()){
+            if (Modifier.isPublic(field.getModifiers())) {continue;} //Skips all public fields
+            System.out.println("FollowPathCommand$" + field.getName());
+            field.setAccessible(true);
+            reflectedFields.put("FollowPathCommand$" + field.getName(),field);
         }
 
     }

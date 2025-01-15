@@ -24,7 +24,10 @@ import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
+import java.lang.reflect.Field;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 
@@ -120,6 +123,14 @@ public class RobotContainer {
     */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return new PathPlannerAuto("ODTAUTO2");
+        try {
+            Command ppAutoCommand = new PathPlannerAuto("ODTAUTO2");
+            Field internalCommand = PathPlannerAuto.class.getDeclaredField("autoCommand");
+            internalCommand.setAccessible(true);
+            return (Command)internalCommand.get(ppAutoCommand);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -142,7 +142,7 @@ public final class Constants {
         public static class AutoConstants {
             public static final RobotConfig ppConfig = new RobotConfig(
                     100.0,
-                    1.0,
+                    0.05,
                     new ModuleConfig(
                             ModuleConstants.Common.Drive.WheelRadius,
                             ModuleConstants.Common.Drive.MaxModuleSpeed,

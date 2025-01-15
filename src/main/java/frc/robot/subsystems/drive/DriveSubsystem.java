@@ -62,12 +62,12 @@ public class DriveSubsystem extends SubsystemBase {
         modules[2] = new Module(RLModuleIO, "RearLeft");
         modules[3] = new Module(RRModuleIO, "RearRight");
         
-
+        
         AutoBuilder.configure(
-            this::getPose,
-            this::resetPose,
-            this::getChassisSpeeds,
-            this::driveCO,
+            () -> {System.out.println("getPose called by pp");return getPose();},//this::getPose,
+            (pose) -> {System.out.println("resetPose called by pp");resetPose(pose);},
+            () -> {System.out.println("getChassisSpeeds called by pp");return getChassisSpeeds();},
+            (speeds) -> {System.out.println("driveCO called by pp");driveCO(speeds);},
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
