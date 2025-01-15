@@ -16,17 +16,27 @@ import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DSControlWord;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobotBase;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Watchdog;
+import edu.wpi.first.wpilibj.event.EventLoop;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
  * each mode, as described in the TimedRobot documentation. If you change the name of this class or
@@ -44,29 +54,34 @@ public class Robot extends LoggedRobot {
     private HashMap<String,Object> modeConstants = new HashMap<>();
 
     /** 
-     * This method uses reflection to expose private fields of Robot's superclasses.
-     * UNDER NO CIRCUMSTANCES SHOULD THIS METHOD BE CALLED IN A COMPETITION! IT IS EXCLUSIVELY FOR
-     * DEBUGGING
+     * Your so-called "access modifiers" can't stop me if I can't read
      * @author Jesse Kane
      */
     private void initTomfoolery(){
-        System.out.println("Initializing BS Hacky Workaround (NOTE: SOMETHING HAS GONE SERIOUSLY WRONG IF YOU'RE READING THIS AT A COMPETITION)");
+        System.out.println("Initializing Tomfoolery (NOTE: THIS IS FOR DEBUGGING ONLY, SOMETHING HAS GONE SERIOUSLY WRONG IF YOU'RE READING THIS AT A COMPETITION)");
         System.out.println("Exposing IterativeRobotBase private fields");
         for (Field field : IterativeRobotBase.class.getDeclaredFields()){
-            System.out.println(field.getName());
+            System.out.println("IterativeRobotBase$" + field.getName());
             field.setAccessible(true);
-            reflectedFields.put(field.getName(),field);
-            try {
-                System.out.println(field.get(this));
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
+            reflectedFields.put("IterativeRobotBase$" + field.getName(),field);
         }
         System.out.println("Exposing IterativeRobotBase Mode enum");
         Class<?> modeClass = IterativeRobotBase.class.getDeclaredClasses()[0];
         for (Object constant : modeClass.getEnumConstants()){
             System.out.println(constant);
             modeConstants.put(constant.toString(),constant);
+        }
+        System.out.println("Exposing CommandScheduler private fields");
+        for (Field field : CommandScheduler.class.getDeclaredFields()){
+            System.out.println("CommandScheduler$" + field.getName());
+            field.setAccessible(true);
+            reflectedFields.put("CommandScheduler$" + field.getName(),field);
+        }
+        System.out.println("Exposing CommandScheduler private methods");
+        for (Method method : CommandScheduler.class.getDeclaredMethods()){
+            System.out.println("CommandScheduler$" + method.getName());
+            method.setAccessible(true);
+            reflectedMethods.put("CommandScheduler$" + method.getName(),method);
         }
 
     }
@@ -126,6 +141,104 @@ public class Robot extends LoggedRobot {
     m_robotContainer = new RobotContainer();
   }
 
+   /** 
+    * 
+    * A debugging version of CommandScheduler's run command, enables detailed logging of the CommandScheduler, to help with diagnosing loop overruns
+    * 
+    * @author Jesse Kane
+    */
+    @SuppressWarnings("unchecked")
+    private void debugCSRun(){
+        System.out.println("--------------- BEGIN COMMANDSCHEDULER RUN ---------------");
+        try {
+            if ((boolean)reflectedFields.get("CommandScheduler$m_disabled").get(CommandScheduler.getInstance())) {
+                return;
+            }
+            ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).reset();
+
+            // Run the periodic method of all registered subsystems.
+            for (Subsystem subsystem : ((Map<Subsystem, Command>)reflectedFields.get("CommandScheduler$m_subsystems").get(CommandScheduler.getInstance())).keySet()) {
+                subsystem.periodic();
+                if (RobotBase.isSimulation()) {
+                    subsystem.simulationPeriodic();
+                }
+                ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).addEpoch(subsystem.getName() + ".periodic()");
+            }
+
+            // Cache the active instance to avoid concurrency problems if setActiveLoop() is called from
+            // inside the button bindings.
+            EventLoop loopCache = ((EventLoop)reflectedFields.get("CommandScheduler$m_activeButtonLoop").get(CommandScheduler.getInstance()));
+            // Poll buttons for new commands to add.
+            loopCache.poll();
+            ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).addEpoch("buttons.run()");
+
+            reflectedFields.get("CommandScheduler$m_inRunLoop").set(CommandScheduler.getInstance(),true);
+            boolean isDisabled = RobotState.isDisabled();
+            // Run scheduled commands, remove finished commands.
+            for (Iterator<Command> iterator = ((Set<Command>)reflectedFields.get("CommandScheduler$m_scheduledCommands").get(CommandScheduler.getInstance())).iterator(); iterator.hasNext(); ) {
+                Command command = iterator.next();
+
+                if (isDisabled && !command.runsWhenDisabled()) {
+                    reflectedMethods.get("CommandScheduler$cancel").invoke(CommandScheduler.getInstance(),command,((Optional<Command>)reflectedFields.get("CommandScheduler$kNoInterruptor").get(CommandScheduler.getInstance())));
+                    continue;
+                }
+                System.out.println("Executing Command " + command);
+                command.execute();
+                for (Consumer<Command> action : (List<Consumer<Command>>)reflectedFields.get("CommandScheduler$m_executeActions").get(CommandScheduler.getInstance())) {
+                    action.accept(command);
+                }
+                ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).addEpoch(command.getName() + ".execute()");
+                if (command.isFinished()) {
+                    ((Set<Command>)reflectedFields.get("CommandScheduler$m_endingCommands").get(CommandScheduler.getInstance())).add(command);
+                    command.end(false);
+                    for (Consumer<Command> action : ((List<Consumer<Command>>)reflectedFields.get("CommandScheduler$m_finishActions").get(CommandScheduler.getInstance()))) {
+                        action.accept(command);
+                    }
+                    ((Set<Command>)reflectedFields.get("CommandScheduler$m_endingCommands").get(CommandScheduler.getInstance())).remove(command);
+                    iterator.remove();
+
+                    ((Map<Subsystem,Command>)reflectedFields.get("CommandScheduler$m_requirements").get(CommandScheduler.getInstance())).keySet().removeAll(command.getRequirements());
+                    ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).addEpoch(command.getName() + ".end(false)");
+                }
+            }
+            reflectedFields.get("CommandScheduler$m_inRunLoop").set(CommandScheduler.getInstance(),false);
+
+            // Schedule/cancel commands from queues populated during loop
+            for (Command command : (Set<Command>)reflectedFields.get("CommandScheduler$m_toSchedule").get(CommandScheduler.getInstance())) {
+                CommandScheduler.getInstance().schedule(command);
+            }
+
+            for (int i = 0; i < ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).size(); i++) {
+                reflectedMethods.get("CommandScheduler$cancel").invoke(
+                    CommandScheduler.getInstance(),
+                    ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).get(i),
+                    ((List<Optional<Command>>)reflectedFields.get("CommandScheduler$m_toCancelInterruptors").get(CommandScheduler.getInstance())).get(i)
+                );
+            }
+
+            ((Set<Command>)reflectedFields.get("CommandScheduler$m_toSchedule").get(CommandScheduler.getInstance())).clear();
+            ((List<Command>)reflectedFields.get("CommandScheduler$m_toCancelCommands").get(CommandScheduler.getInstance())).clear();
+            ((List<Optional<Command>>)reflectedFields.get("CommandScheduler$m_toCancelInterruptors").get(CommandScheduler.getInstance())).clear();
+
+            // Add default commands for un-required registered subsystems.
+            for (Map.Entry<Subsystem, Command> subsystemCommand : ((Map<Subsystem, Command>)reflectedFields.get("CommandScheduler$m_subsystems").get(CommandScheduler.getInstance())).entrySet()) {
+                if (!((Map<Subsystem,Command>)reflectedFields.get("CommandScheduler$m_requirements").get(CommandScheduler.getInstance())).containsKey(subsystemCommand.getKey())
+                    && subsystemCommand.getValue() != null) {
+                    CommandScheduler.getInstance().schedule(subsystemCommand.getValue());
+                }
+            }
+
+            ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).disable();
+            if (((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).isExpired()) {
+                System.out.println("CommandScheduler loop overrun");
+                ((Watchdog)reflectedFields.get("CommandScheduler$m_watchdog").get(CommandScheduler.getInstance())).printEpochs();
+            }
+    } catch (IllegalAccessException | InvocationTargetException e) {
+        e.printStackTrace();
+    }
+    System.out.println("---------------- END COMMANDSCHEDULER RUN ----------------");
+  }
+
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items like diagnostics
    * that you want ran during disabled, autonomous, teleoperated and test.
@@ -139,7 +252,7 @@ public class Robot extends LoggedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    CommandScheduler.getInstance().run();
+    debugCSRun();
 
     //m_robotContainer.updateInterface();
   }
@@ -155,40 +268,40 @@ public class Robot extends LoggedRobot {
         DriverStation.refreshData();
 
         System.out.println("Resetting Watchdog");
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).reset();
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).reset();
 
         System.out.println("Resetting DS Control Word");
-        ((DSControlWord)reflectedFields.get("m_word").get(this)).refresh();
+        ((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).refresh();
 
         // Get current mode
         System.out.println("Getting Current Mode");
         Object mode = modeConstants.get("kNone");
-        if (((DSControlWord)reflectedFields.get("m_word").get(this)).isDisabled()) {
+        if (((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).isDisabled()) {
             mode = modeConstants.get("kDisabled");
-        } else if (((DSControlWord)reflectedFields.get("m_word").get(this)).isAutonomous()) {
+        } else if (((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).isAutonomous()) {
             mode = modeConstants.get("kAutonomous");
-        } else if (((DSControlWord)reflectedFields.get("m_word").get(this)).isTeleop()) {
+        } else if (((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).isTeleop()) {
             mode = modeConstants.get("kTeleop");
-        } else if (((DSControlWord)reflectedFields.get("m_word").get(this)).isTest()) {
+        } else if (((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).isTest()) {
             mode = modeConstants.get("kTest");
         }
 
-        if (!((boolean)reflectedFields.get("m_calledDsConnected").get(this)) && ((DSControlWord)reflectedFields.get("m_word").get(this)).isDSAttached()) {
-            reflectedFields.get("m_calledDsConnected").set(this,true);
+        if (!((boolean)reflectedFields.get("IterativeRobotBase$m_calledDsConnected").get(this)) && ((DSControlWord)reflectedFields.get("IterativeRobotBase$m_word").get(this)).isDSAttached()) {
+            reflectedFields.get("IterativeRobotBase$m_calledDsConnected").set(this,true);
             driverStationConnected();
         }
 
         // If mode changed, call mode exit and entry functions
-        if ((reflectedFields.get("m_lastMode").get(this)) != mode) {
+        if ((reflectedFields.get("IterativeRobotBase$m_lastMode").get(this)) != mode) {
             System.out.println("Detected mode change");
             // Call last mode's exit function
             System.out.println("Exiting old mode");
-            switch ((reflectedFields.get("m_lastMode").get(this).toString())) {
+            switch ((reflectedFields.get("IterativeRobotBase$m_lastMode").get(this).toString())) {
                 case "kDisabled" -> disabledExit();
                 case "kAutonomous" -> autonomousExit();
                 case "kTeleop" -> teleopExit();
                 case "kTest" -> {
-                    if ((boolean)reflectedFields.get("m_lwEnabledInTest").get(this)) {
+                    if ((boolean)reflectedFields.get("IterativeRobotBase$m_lwEnabledInTest").get(this)) {
                         LiveWindow.setEnabled(false);
                         Shuffleboard.disableActuatorWidgets();
                     }
@@ -204,29 +317,29 @@ public class Robot extends LoggedRobot {
             switch (mode.toString()) {
                 case "kDisabled" -> {
                     disabledInit();
-                    ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("disabledInit()");
+                    ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("disabledInit()");
                 }
                 case "kAutonomous" -> {
                     autonomousInit();
-                    ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("autonomousInit()");
+                    ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("autonomousInit()");
                 }
                 case "kTeleop" -> {
                     teleopInit();
-                    ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("teleopInit()");
+                    ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("teleopInit()");
                 }
                 case "kTest" -> {
-                    if ((boolean)reflectedFields.get("m_lwEnabledInTest").get(this)) {
+                    if ((boolean)reflectedFields.get("IterativeRobotBase$m_lwEnabledInTest").get(this)) {
                         LiveWindow.setEnabled(true);
                         Shuffleboard.enableActuatorWidgets();
                     }
                     testInit();
-                    ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("testInit()");
+                    ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("testInit()");
                 }
                 default -> {
                     // NOP
                 }
             }
-            reflectedFields.get("m_lastMode").set(this,mode);
+            reflectedFields.get("IterativeRobotBase$m_lastMode").set(this,mode);
         }
         // Call the appropriate function depending upon the current robot mode
         System.out.println("Calling Mode-Specific periodic function");
@@ -234,22 +347,22 @@ public class Robot extends LoggedRobot {
             case "kDisabled" -> {
                 DriverStationJNI.observeUserProgramDisabled();
                 disabledPeriodic();
-                ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("disabledPeriodic()");
+                ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("disabledPeriodic()");
             }
             case "kAutonomous" -> {
                 DriverStationJNI.observeUserProgramAutonomous();
                 autonomousPeriodic();
-                ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("autonomousPeriodic()");
+                ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("autonomousPeriodic()");
             }
             case "kTeleop" -> {
                 DriverStationJNI.observeUserProgramTeleop();
                 teleopPeriodic();
-                ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("teleopPeriodic()");
+                ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("teleopPeriodic()");
             }
             case "kTest" -> {
                 DriverStationJNI.observeUserProgramTest();
                 testPeriodic();
-                ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("testPeriodic()");
+                ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("testPeriodic()");
             }
             default -> {
                 // NOP
@@ -260,34 +373,34 @@ public class Robot extends LoggedRobot {
         robotPeriodic();
         
         System.out.println("Adding watchdog epochs");
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("robotPeriodic()");
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("robotPeriodic()");
 
         SmartDashboard.updateValues();
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("SmartDashboard.updateValues()");
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("SmartDashboard.updateValues()");
         LiveWindow.updateValues();
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("LiveWindow.updateValues()");
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("LiveWindow.updateValues()");
         Shuffleboard.update();
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("Shuffleboard.update()");
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("Shuffleboard.update()");
 
         if (isSimulation()) {
             System.out.println("Calling simulationPeriodic");
             HAL.simPeriodicBefore();
             simulationPeriodic();
             HAL.simPeriodicAfter();
-            ((Watchdog)reflectedFields.get("m_watchdog").get(this)).addEpoch("simulationPeriodic()");
+            ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).addEpoch("simulationPeriodic()");
         }
 
-        ((Watchdog)reflectedFields.get("m_watchdog").get(this)).disable();
+        ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).disable();
 
         // Flush NetworkTables
         System.out.println("Flushing networkTables");
-        if ((boolean)reflectedFields.get("m_ntFlushEnabled").get(this)) {
+        if ((boolean)reflectedFields.get("IterativeRobotBase$m_ntFlushEnabled").get(this)) {
             NetworkTableInstance.getDefault().flushLocal();
         }
         
         // Warn on loop time overruns
-        if (((Watchdog)reflectedFields.get("m_watchdog").get(this)).isExpired()) {
-            ((Watchdog)reflectedFields.get("m_watchdog").get(this)).printEpochs();
+        if (((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).isExpired()) {
+            ((Watchdog)reflectedFields.get("IterativeRobotBase$m_watchdog").get(this)).printEpochs();
         }
     } catch (IllegalAccessException e) {
         e.printStackTrace();
