@@ -7,13 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "GETOUTOFMYHEAD"
+            "pathName": "PATH1"
           }
         }
       ]
     }
   },
-  "resetOdom": true,
+  "resetOdom": false,
   "folder": null,
   "choreoAuto": false
 }

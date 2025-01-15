@@ -107,7 +107,7 @@ public class RobotContainer {
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
 
-        m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
+        m_driverController.b().whileTrue(new PathPlannerAuto("AUTO1"));
         m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
             targetPose,
             constraints,
@@ -124,7 +124,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
         try {
-            Command ppAutoCommand = new PathPlannerAuto("ODTAUTO2");
+            Command ppAutoCommand = new PathPlannerAuto("AUTO1");
             Field internalCommand = PathPlannerAuto.class.getDeclaredField("autoCommand");
             internalCommand.setAccessible(true);
             return (Command)internalCommand.get(ppAutoCommand);

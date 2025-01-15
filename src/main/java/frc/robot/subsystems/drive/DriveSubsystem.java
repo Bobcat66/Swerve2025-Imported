@@ -64,9 +64,9 @@ public class DriveSubsystem extends SubsystemBase {
         
         
         AutoBuilder.configure(
-            () -> {System.out.println("getPose called by pp");return getPose();},//this::getPose,
+            () -> {System.out.println("getPose called by pp");Pose2d output = getPose();System.out.println("Pose retrieved");return output;},//this::getPose,
             (pose) -> {System.out.println("resetPose called by pp");resetPose(pose);},
-            () -> {System.out.println("getChassisSpeeds called by pp");return getChassisSpeeds();},
+            () -> {System.out.println("getChassisSpeeds called by pp");ChassisSpeeds speeds = getChassisSpeeds();System.out.println("Speeds retrieved");return speeds;},
             (speeds) -> {System.out.println("driveCO called by pp");driveCO(speeds);},
             new PPHolonomicDriveController(
                 new PIDConstants(
