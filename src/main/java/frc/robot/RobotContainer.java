@@ -17,6 +17,10 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.commands.drive.DriveClosedLoopTeleop;
 import frc.robot.subsystems.Vision;
 
+import static frc.robot.Constants.VisionConstants.Coordinates.reefAprilCoordinates;
+
+import java.util.logging.Logger;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
@@ -25,6 +29,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
+
+import edu.wpi.first.units.Units;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -62,7 +68,13 @@ public class RobotContainer {
             new ModuleIOSim(ModuleConfig.RearLeft),
             m_vision
         );
-
+        m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
+            () -> m_driverController.rightBumper().getAsBoolean(),
+            () -> m_driverController.leftBumper().getAsBoolean(),
+            m_drive));
         configureBindings();
     }
 
@@ -76,24 +88,21 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
-        Pose2d targetPose = new Pose2d(m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
-        PathConstraints constraints = new PathConstraints(50, 500, 500, 500);
+        Pose2d targetPose = new Pose2d(
+            m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0],
+            m_vision.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1],
+            Rotation2d.fromDegrees(m_vision.getClosestAprilTagAngle(m_drive.getPose().getX(), m_drive.getPose().getY())));
+        
+        PathConstraints constraints = new PathConstraints(1.524, 4, 540 * (1/180*Math.PI), 720 * (1/180*Math.PI));
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
             .onTrue(new ExampleCommand(m_exampleSubsystem));
-        m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
-            () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
-            () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
-            () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
-            () -> m_driverController.rightBumper().getAsBoolean(),
-            () -> m_driverController.leftBumper().getAsBoolean(),
-            m_drive));
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
-        // System.out.println(m_vision.getClosestAprilTagIndex(m_drive.getPose().getX(), m_drive.getPose().getY()));
 
         m_driverController.b().whileTrue(new PathPlannerAuto("ODTAUTO2"));
         m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
+            //new Pose2d(1, 1, Rotation2d.fromDegrees(30)),
             targetPose,
             constraints,
             0.0

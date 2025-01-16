@@ -20,6 +20,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import frc.robot.Constants.VisionConstants.CamConfig;
+
+import static frc.robot.Constants.VisionConstants.Coordinates.reefAprilAngles;
 import static frc.robot.Constants.VisionConstants.Coordinates.reefAprilCoordinates;
 import static frc.robot.Constants.VisionConstants.Coordinates.reefLeftBranchCoordinates;
 import static frc.robot.Constants.VisionConstants.Coordinates.reefRightBranchCoordinates;
@@ -132,13 +134,12 @@ public class Vision {
      */
     public int getClosestAprilTagIndex(double robotX, double robotY){
         double tempMinDistance = -1; // Distance away from april tag
-        int aprilIndex = -1; // index of that april tag
-
+        int aprilIndex = -1; // index of that april tag, maybe should be initialized to 0
 
         for (int i = 0; i < reefAprilCoordinates.length; i++){
             double aprilX = reefAprilCoordinates[i][0];
             double aprilY = reefAprilCoordinates[i][1];
-            // Robot is 1 apriltag is 2
+ 
             double distance = Math.sqrt(Math.pow(aprilX - robotX, 2) + Math.pow(aprilY - robotY, 2));
             if (tempMinDistance == -1 || distance < tempMinDistance) {
                 tempMinDistance = distance;
@@ -159,6 +160,12 @@ public class Vision {
         return coords;
     }
 
+    public double getClosestAprilTagAngle(double robotX, double robotY) {
+        int index = getClosestAprilTagIndex(robotX, robotY);
+        double angle = reefAprilAngles[index];
+        return angle;
+    }
+
     /**
      * @param robotX x-pose of the robot
      * @param robotY y-pose of the robot
@@ -171,7 +178,6 @@ public class Vision {
     }
 
     /**
-     * @author Tejas Gupta
      * @param robotX x-pose of the robot
      * @param robotY y-pose of the robot
      * @return The location of the branch to the right of the nearest reef April Tag
