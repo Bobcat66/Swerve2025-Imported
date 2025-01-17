@@ -4,6 +4,12 @@
 
 package frc.robot;
 
+import java.lang.instrument.Instrumentation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.function.Supplier;
+
+import debug.DebugInstrumentator;
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -20,6 +26,20 @@ public final class Main {
     * <p>If you change your main robot class, change the parameter type.
     */
     public static void main(String... args) {
-        RobotBase.startRobot(Robot::new);
+        DebugInstrumentator.getInstance().testInstrumentation();
+        DebugInstrumentator.getInstance().load();
+        System.out.println("INSTRUMENTATION LOADED");
+        System.out.println(DebugInstrumentator.getInstance().classLoader);
+        try{ 
+            Class<?> robotBaseClass = DebugInstrumentator.getInstance().classLoader.loadClass("edu.wpi.first.wpilibj.RobotBase");
+            Class<?> robotClass = DebugInstrumentator.getInstance().classLoader.loadClass("frc.robot.Robot");
+            Supplier<Robot> robotConstructor = () -> {try {return (Robot)robotClass.getDeclaredConstructor().newInstance();}catch(IllegalAccessException | InvocationTargetException | NoSuchMethodException | InstantiationException e){e.printStackTrace();}return null;};
+            robotBaseClass.getMethod("startRobot",Supplier.class).invoke(null,robotConstructor);
+        } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            e.printStackTrace();
+        }
+        
+        // RobotBase.startRobot(Robot::new);
+        
     }
 }

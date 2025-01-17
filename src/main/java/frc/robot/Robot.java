@@ -13,6 +13,8 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.controllers.PathFollowingController;
 
+import debug.DebugInstrumentator;
+
 import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.hal.DriverStationJNI;
@@ -277,7 +279,17 @@ public class Robot extends LoggedRobot {
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic
     // block in order for anything in the Command-based framework to work.
-    debugCSRun();
+    try{
+        Class<?> clazz = DebugInstrumentator.getInstance().classLoader.loadClass("edu.wpi.first.wpilibj2.command.CommandScheduler");
+        Object inst = clazz.getDeclaredMethod("getInstance").invoke(null);
+        clazz.getDeclaredMethod("run").invoke(inst);
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    
+    //CommandScheduler.getInstance().run();
+    //debugCSRun();
 
     //m_robotContainer.updateInterface();
   }

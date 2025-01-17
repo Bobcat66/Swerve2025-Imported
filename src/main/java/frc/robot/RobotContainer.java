@@ -25,6 +25,7 @@ import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import java.lang.reflect.Field;
+import java.util.List;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -32,6 +33,8 @@ import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
@@ -89,9 +92,9 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
-        //TODO: Fix this
-        Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
 
+        //Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
+        Pose2d targetPose = Localization.getClosestReefFace(m_drive.getPose()).AprilTag;
         PathConstraints constraints = new PathConstraints(MetersPerSecond.of(5), MetersPerSecondPerSecond.of(5), RadiansPerSecond.of(5), RadiansPerSecondPerSecond.of(5));
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
         new Trigger(m_exampleSubsystem::exampleCondition)
@@ -117,20 +120,33 @@ public class RobotContainer {
     }
 
     /**
+     * Returns a modified FollowPathCommand for debugging
+     * @author Jesse Kane
+     */
+    @SuppressWarnings("unchecked")
+    private FollowPathCommand getDebugFollowPathCommand() { 
+        try {
+            Command ppAutoCommand = new PathPlannerAuto("AUTO1");
+            Field internalCommand = PathPlannerAuto.class.getDeclaredField("autoCommand");
+            Field SCGCommandList = SequentialCommandGroup.class.getDeclaredField("m_commands");
+            internalCommand.setAccessible(true);
+            SCGCommandList.setAccessible(true);
+            SequentialCommandGroup autoSCG = (SequentialCommandGroup)internalCommand.get(ppAutoCommand);
+            CommandScheduler.getInstance().clearComposedCommands();
+            return (FollowPathCommand)(((List<Command>)SCGCommandList.get(autoSCG)).get(0));
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
     * Use this to pass the autonomous command to the main {@link Robot} class.
     *
     * @return the command to run in autonomous
     */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        try {
-            Command ppAutoCommand = new PathPlannerAuto("AUTO1");
-            Field internalCommand = PathPlannerAuto.class.getDeclaredField("autoCommand");
-            internalCommand.setAccessible(true);
-            return (Command)internalCommand.get(ppAutoCommand);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return getDebugFollowPathCommand();
     }
 }

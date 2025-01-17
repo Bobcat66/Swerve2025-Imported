@@ -122,6 +122,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     /** Chassis-oriented Closed-loop driving */
     public void driveCO(ChassisSpeeds speeds) {
+        System.out.println("Driving Chassis Oriented " + speeds);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
         for (int i = 0; i < 4; i++) {

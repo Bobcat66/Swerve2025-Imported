@@ -145,6 +145,9 @@ gradle-app.setting
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
 
+# Avoid ignoring DebugAgent jar file
+!DebugAgent.jar
+
 # Cache of project
 .gradletasknamecache
 
@@ -188,3 +191,6 @@ compile_commands.json
 
 # Build Metadata
 src/main/java/frc/robot/BuildConstants.java
+
+# Build helper file
+src/main/java/debug/buildhelp.txt
