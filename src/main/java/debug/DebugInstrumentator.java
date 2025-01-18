@@ -17,7 +17,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
 /**
  * Dynamically adds instrumentation code to the WPILIB bytecode. Instrumentation methods should ALWAYS be called in the robot's main method, prior to any other initialization. This is necessary to ensure that
- * the JVM has not loaded the CommandScheduler class yet.
+ * the JVM has not loaded the CommandScheduler class yet. WIP
  * 
  * @author Jesse Kane
  */

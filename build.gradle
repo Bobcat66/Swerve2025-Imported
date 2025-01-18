@@ -117,7 +117,7 @@ tasks.withType(JavaCompile) {
 
 //Enable instrumentation. Comment this section out to disable instrumentation
 tasks.withType(JavaExec) {
-    jvmArgs = jvmArgs + ["--add-opens", "java.base/java.lang=ALL-UNNAMED"]
+    //jvmArgs = jvmArgs + ["--add-opens", "java.base/java.lang=ALL-UNNAMED"]
 }
 
 
