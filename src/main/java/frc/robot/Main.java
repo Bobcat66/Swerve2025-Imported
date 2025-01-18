@@ -29,17 +29,7 @@ public final class Main {
         DebugInstrumentator.getInstance().testInstrumentation();
         DebugInstrumentator.getInstance().load();
         System.out.println("INSTRUMENTATION LOADED");
-        System.out.println(DebugInstrumentator.getInstance().classLoader);
-        try{ 
-            Class<?> robotBaseClass = DebugInstrumentator.getInstance().classLoader.loadClass("edu.wpi.first.wpilibj.RobotBase");
-            Class<?> robotClass = DebugInstrumentator.getInstance().classLoader.loadClass("frc.robot.Robot");
-            Supplier<Robot> robotConstructor = () -> {try {return (Robot)robotClass.getDeclaredConstructor().newInstance();}catch(IllegalAccessException | InvocationTargetException | NoSuchMethodException | InstantiationException e){e.printStackTrace();}return null;};
-            robotBaseClass.getMethod("startRobot",Supplier.class).invoke(null,robotConstructor);
-        } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            e.printStackTrace();
-        }
-        
-        // RobotBase.startRobot(Robot::new);
+        RobotBase.startRobot(Robot::new);
         
     }
 }

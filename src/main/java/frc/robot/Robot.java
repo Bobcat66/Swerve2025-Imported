@@ -448,8 +448,8 @@ public class Robot extends LoggedRobot {
 
   @Override
   public void loopFunc(){
-    //super.loopFunc();
-    debugLoopFunc();
+    super.loopFunc();
+    //debugLoopFunc();
   }
   
   

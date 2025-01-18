@@ -4,6 +4,7 @@ import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
+import javassist.CtMethod;
 import javassist.NotFoundException;
 
 import java.io.IOException;
@@ -61,117 +62,97 @@ public final class DebugInstrumentator {
     }
 
     /** Dynamically modifies JVM bytecode to add debugging telemetry to CommandScheduler's run method.*/
-    public void registerRunTelemetry() {
+    public void CSrunInstrumentation() {
+        String methodBody = "{"
+        + "System.out.println(\"------------ BEGIN COMMANDSCHEDULER RUN ------------\");"
+        + "if (m_disabled) {"
+        + "    return;"
+        + "}"
+        + "System.out.println(\"Resetting watchdog\");"
+        + "m_watchdog.reset();"
+        + "for (Subsystem subsystem : m_subsystems.keySet()) {"
+        + "    System.out.println(\"Running periodic of \" + subsystem.toString());"
+        + "    subsystem.periodic();"
+        + "    if (RobotBase.isSimulation()) {"
+        + "        System.out.println(\"Running sim periodic of \" + subsystem.toString());"
+        + "        subsystem.simulationPeriodic();"
+        + "    }"
+        + "    m_watchdog.addEpoch(subsystem.getName() + \".periodic()\");"
+        + "}"
+        + "System.out.println(\"Polling Buttons\");"
+        + "EventLoop loopCache = m_activeButtonLoop;"
+        + "loopCache.poll();"
+        + "m_watchdog.addEpoch(\"buttons.run()\");"
+        + "m_inRunLoop = true;"
+        + "boolean isDisabled = RobotState.isDisabled();"
+        + "Iterator<Command> iterator = m_scheduledCommands.iterator();"
+        + "while (iterator.hasNext(); ) {"
+        + "    Command command = iterator.next();"
+        + "    if (isDisabled && !command.runsWhenDisabled()) {"
+        + "        cancel(command, kNoInterruptor);"
+        + "        continue;"
+        + "    }"
+        + "    System.out.println(\"Executing command \" + command.toString());"
+        + "    command.execute();"
+        + "    for (Consumer<Command> action : m_executeActions) {"
+        + "        action.accept(command);"
+        + "    }"
+        + "    m_watchdog.addEpoch(command.getName() + \".execute()\");"
+        + "    if (command.isFinished()) {"
+        + "        m_endingCommands.add(command);"
+        + "        command.end(false);"
+        + "        for (Consumer<Command> action : m_finishActions) {"
+        + "            action.accept(command);"
+        + "        }"
+        + "        m_endingCommands.remove(command);"
+        + "        iterator.remove();"
+        + "        m_requirements.keySet().removeAll(command.getRequirements());"
+        + "        m_watchdog.addEpoch(command.getName() + \".end(false)\");"
+        + "    }"
+        + "}"
+        + "m_inRunLoop = false;"
+        + "for (Command command : m_toSchedule) {"
+        + "    schedule(command);"
+        + "}"
+        + "for (int i = 0; i < m_toCancelCommands.size(); i++) {"
+        + "    cancel(m_toCancelCommands.get(i), m_toCancelInterruptors.get(i));"
+        + "}"
+        + "m_toSchedule.clear();"
+        + "m_toCancelCommands.clear();"
+        + "m_toCancelInterruptors.clear();"
+        + "for (Map.Entry<Subsystem, Command> subsystemCommand : m_subsystems.entrySet()) {"
+        + "    if (!m_requirements.containsKey(subsystemCommand.getKey()) && subsystemCommand.getValue() != null) {"
+        + "        schedule(subsystemCommand.getValue());"
+        + "    }"
+        + "}"
+        + "System.out.println(\"Disabling watchdog\");"
+        + "m_watchdog.disable();"
+        + "if (m_watchdog.isExpired()) {"
+        + "    System.out.println(\"CommandScheduler loop overrun\");"
+        + "    m_watchdog.printEpochs();"
+        + "}"
+        + "System.out.println(\"------------- END COMMANDSCHEDULER RUN -------------\");"
+        + "}";
         try{
-            csClass.getDeclaredMethod("run").setBody("""
-            {
-                System.out.println("------------ BEGIN COMMANDSCHEDULER RUN ------------");
-                if (m_disabled) {
-                    return;
-                }
-                System.out.println("Resetting watchdog");
-                m_watchdog.reset();
-
-                // Run the periodic method of all registered subsystems.
-                for (Subsystem subsystem : m_subsystems.keySet()) {
-                    System.out.println("Running periodic of " + subsystem.toString());
-                    subsystem.periodic();
-                    if (RobotBase.isSimulation()) {
-                        System.out.println("Running sim periodic of " + subsystem.toString());
-                        subsystem.simulationPeriodic();
-                    }
-                    m_watchdog.addEpoch(subsystem.getName() + ".periodic()");
-                }
-
-                System.out.println("Polling Buttons");
-                // Cache the active instance to avoid concurrency problems if setActiveLoop() is called from
-                // inside the button bindings.
-                EventLoop loopCache = m_activeButtonLoop;
-                // Poll buttons for new commands to add.
-                loopCache.poll();
-                m_watchdog.addEpoch("buttons.run()");
-
-                m_inRunLoop = true;
-                boolean isDisabled = RobotState.isDisabled();
-                // Run scheduled commands, remove finished commands.
-                for (Iterator<Command> iterator = m_scheduledCommands.iterator(); iterator.hasNext(); ) {
-                    Command command = iterator.next();
-
-                    if (isDisabled && !command.runsWhenDisabled()) {
-                        cancel(command, kNoInterruptor);
-                        continue;
-                    }
-                    System.out.println("Executing command " + command.toString());
-                    command.execute();
-                    for (Consumer<Command> action : m_executeActions) {
-                        action.accept(command);
-                    }
-                    m_watchdog.addEpoch(command.getName() + ".execute()");
-                    if (command.isFinished()) {
-                        m_endingCommands.add(command);
-                        command.end(false);
-                        for (Consumer<Command> action : m_finishActions) {
-                            action.accept(command);
-                        }
-                        m_endingCommands.remove(command);
-                        iterator.remove();
-
-                        m_requirements.keySet().removeAll(command.getRequirements());
-                        m_watchdog.addEpoch(command.getName() + ".end(false)");
-                    }
-                }
-                m_inRunLoop = false;
-
-                // Schedule/cancel commands from queues populated during loop
-                for (Command command : m_toSchedule) {
-                    schedule(command);
-                }
-
-                for (int i = 0; i < m_toCancelCommands.size(); i++) {
-                    cancel(m_toCancelCommands.get(i), m_toCancelInterruptors.get(i));
-                }
-
-                m_toSchedule.clear();
-                m_toCancelCommands.clear();
-                m_toCancelInterruptors.clear();
-
-                // Add default commands for un-required registered subsystems.
-                for (Map.Entry<Subsystem, Command> subsystemCommand : m_subsystems.entrySet()) {
-                    if (!m_requirements.containsKey(subsystemCommand.getKey()) && subsystemCommand.getValue() != null) {
-                        schedule(subsystemCommand.getValue());
-                    }
-                }
-                System.out.println("Disabling watchdog");
-                m_watchdog.disable();
-                if (m_watchdog.isExpired()) {
-                    System.out.println("CommandScheduler loop overrun");
-                    m_watchdog.printEpochs();
-                }
-                System.out.println("------------- END COMMANDSCHEDULER RUN -------------");
-        }""");
+            csClass.getDeclaredMethod("run").setBody(methodBody);
+            
         } catch (NotFoundException | CannotCompileException e) {
             e.printStackTrace();
+            System.out.println(methodBody);
         }
     }
 
     public void testInstrumentation(){
         try{
-            csClass.getDeclaredMethod("run").setBody("""
-            {
-                System.out.println("RUNNING THE COMMAND SCHEDULER");
-            }""");
+            csClass.getDeclaredMethod("run").insertAt(266,"System.out.println(\"Running Subsystem periodic methods\");");
+            csClass.getDeclaredMethod("run").insertAt(266,"System.out.println(\"------------ BEGIN COMMANDSCHEDULER RUN ------------\");");
+            csClass.getDeclaredMethod("run").insertAt(273,"System.out.println(\"Running periodic method of subsystem \");");
+            System.out.println(csClass.getDeclaredMethod("run").getMethodInfo().getCodeAttribute().toString());
         } catch (NotFoundException | CannotCompileException e) {
             e.printStackTrace();
         }
     }
 
-    public void addRunTelemetry(){
-        try {
-            csClass.getDeclaredMethod("run").insertAfter("System.out.println(\"Ran CommandScheduler\");");
-        } catch (NotFoundException | CannotCompileException e) {
-            e.printStackTrace();
-        }
-    }
     /** Dynamically modifies JVM bytecode to add debugging telemetry to CommandScheduler's schedule method.*/
     public void registerSchedulingTelemetry(){
         try {
@@ -234,8 +215,9 @@ public final class DebugInstrumentator {
     /** Loads the CommandScheduler's bytecode. THE CS INSTRUMENTATOR CAN NO LONGER BE USED AFTER THIS METHOD IS INVOKED */
     public void load(){
         try {
-            classLoader.toClass(csClass.getName(),csClass.toBytecode(),0,csClass.toBytecode().length,csClass.getClass().getProtectionDomain());
-        } catch (CannotCompileException | IOException e) {
+            pool.toClass(csClass);
+            //classLoader.toClass(csClass.getName(),csClass.toBytecode(),0,csClass.toBytecode().length,csClass.getClass().getProtectionDomain());
+        } catch (CannotCompileException e) {
             e.printStackTrace();
         }
     }

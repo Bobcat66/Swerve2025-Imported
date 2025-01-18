@@ -89,9 +89,11 @@ test {
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
 }
 
+
+
 // Simulation configuration (e.g. environment variables).
 wpi.sim.addGui().defaultEnabled = true
-wpi.sim.addDriverstation()
+wpi.sim.addDriverstation().defaultEnabled = true //Disable to disable using real driverstation
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
 // in order to make them all available at runtime. Also adding the manifest so WPILib
@@ -111,6 +113,11 @@ wpi.java.configureTestTasks(test)
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {
     options.compilerArgs.add '-XDstringConcat=inline'
+}
+
+//Enable instrumentation. Comment this section out to disable instrumentation
+tasks.withType(JavaExec) {
+    jvmArgs = jvmArgs + ["--add-opens", "java.base/java.lang=ALL-UNNAMED"]
 }
 
 

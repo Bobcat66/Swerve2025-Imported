@@ -1,0 +1,16 @@
+To run a simulation with debugging instrumentation enabled, you need to follow a few simple steps:
+
+1. In the main.java file, call the DebugInstrumentator singleton class, which has helper methods to dynamically add instrumentation.
+(Remember to call the .load() method once you've added your instrumentation)
+
+2. add the following code snippet to the build.gradle file:
+
+tasks.withType(JavaExec) {
+    jvmArgs = jvmArgs + ["--add-opens", "java.base/java.lang=ALL-UNNAMED"]
+}
+
+3. start the simulation by entering the following command into the terminal:
+
+./gradlew simulateJava
+
+NOTE: using the normal "simulate" task from VSCode WILL NOT WORK, Instrumentation ONLY works when the simulation started from the terminal
