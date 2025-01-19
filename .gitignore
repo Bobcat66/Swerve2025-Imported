@@ -190,7 +190,5 @@ compile_commands.json
 .factorypath
 
 # Build Metadata
-src/main/java/frc/robot/BuildConstants.java
+src/main/java/org/pihisamurai/frc2025/robot/BuildConstants.java
 
-# Build helper file
-src/main/java/debug/buildhelp.txt
