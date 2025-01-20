@@ -1,6 +1,7 @@
 package org.pihisamurai.lib.debug;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InaccessibleObjectException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
@@ -29,14 +30,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
  */
 public final class ReflectionDebugger {
 
-    public static class ClassMonitor {
-        public Map<String,Field> fields = new HashMap<>();
-        public Map<String,Method> methods = new HashMap<>();
-        public <T> FieldMonitor<T> getMonitor(String fieldName,Object instance) {
-            return new FieldMonitor<T>(fields.get(fieldName),instance);
-        }
-    }
-
     private final Map<Class<?>,ClassMonitor> attachedClasses = new HashMap<>();
 
     private static ReflectionDebugger instance;
@@ -57,7 +50,7 @@ public final class ReflectionDebugger {
         return instance;
     }
 
-    public ClassMonitor getMonitor(Class<?> clazz) {
+    public ClassMonitor getClassMonitor(Class<?> clazz) {
         if (attachedClasses.keySet().contains(clazz)) {
             return attachedClasses.get(clazz);
         } else {
@@ -71,18 +64,30 @@ public final class ReflectionDebugger {
             LOGGER.warning("Debugger is already attached to " + clazz.getSimpleName());
             return null;
         }
+        LOGGER.info("Attaching to " + clazz.getCanonicalName());
         StringBuilder logString = new StringBuilder();
-        logString.append("Attaching to " + clazz.getCanonicalName() + "\n");
-        attachedClasses.put(clazz,new ClassMonitor());
+        logString.append("Attached to " + clazz.getCanonicalName() + "\n");
+        attachedClasses.put(clazz,new ClassMonitor(clazz));
         
-        logString.append("Exposing Fields:\n");
+        logString.append("Exposed Fields:\n");
         for (Field field : clazz.getDeclaredFields()){
+            try {
+                field.setAccessible(true);
+            } catch (InaccessibleObjectException e) {
+                LOGGER.warning("Field " + clazz.getCanonicalName() + "$" + field.getName() + " is inaccessible and will not be monitored by the Debugger.");
+                continue;
+            }
             logString.append(field.getName() + "\n");
-            field.setAccessible(true);
             attachedClasses.get(clazz).fields.put(field.getName(),field);
         }
-        logString.append("Exposing Methods:\n");
+        logString.append("Exposed Methods:\n");
         for (Method method : clazz.getDeclaredMethods()){
+            try {
+                method.setAccessible(true);
+            } catch (InaccessibleObjectException e) {
+                LOGGER.warning("Method " + clazz.getCanonicalName() + "$" + method.getName() + " is inaccessible and will not be monitored by the Debugger.");
+                continue;
+            }
             StringBuilder tsb = new StringBuilder(method.getName() + "{");
             boolean params = false;
             for (Parameter param : method.getParameters()){
@@ -94,7 +99,6 @@ public final class ReflectionDebugger {
                 tsb.deleteCharAt(tsb.length()-1);
             }
             tsb.append("}");
-            method.setAccessible(true);
             attachedClasses.get(clazz).methods.put(tsb.toString(),method);
             logString.append(tsb.toString() + "\n");
         }

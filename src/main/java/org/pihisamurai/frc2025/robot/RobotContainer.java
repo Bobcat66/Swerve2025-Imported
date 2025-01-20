@@ -11,6 +11,10 @@ import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.pihisamurai.frc2025.robot.Constants.Akit;
 import org.pihisamurai.frc2025.robot.Constants.OIConstants;
@@ -26,13 +30,24 @@ import org.pihisamurai.frc2025.robot.subsystems.drive.GyroIOSim;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOHardware;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOSim;
 import org.pihisamurai.frc2025.robot.utils.Localization;
+import org.pihisamurai.lib.debug.FieldMonitor;
 import org.pihisamurai.lib.debug.PPDebugging;
+import org.pihisamurai.lib.debug.ReflectionDebugger;
+import org.pihisamurai.lib.debug.ClassMonitor;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PathFollowingController;
+import com.pathplanner.lib.events.EventScheduler;
 import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
+import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.PPLibTelemetry;
+import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -43,6 +58,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.math.geometry.Pose2d;
 
@@ -132,20 +148,104 @@ public class RobotContainer {
         SequentialCommandGroup autoSCG = (SequentialCommandGroup)PPDebugging.getAutoCommand(auto);
         FollowPathCommand autoFPC = (FollowPathCommand)PPDebugging.getNthCommandFromSCG(autoSCG, 0).get();
         PathPlannerTrajectory trajectory = PPDebugging.getTrajectoryFromFPC(autoFPC);
+        ClassMonitor FPCMonitor = ReflectionDebugger.getInstance().getClassMonitor(FollowPathCommand.class);
+
+        
         return new Command(){
+
             FollowPathCommand fpc = autoFPC;
-            PathPlannerTrajectory traj = trajectory;
-            Timer timer = PPDebugging.getTimerFromFPC(autoFPC);
+
+            FieldMonitor<Timer> timerMntr = FPCMonitor.<Timer>getFieldMonitor("timer", autoFPC);
+            FieldMonitor<PathPlannerPath> originalPathMntr = FPCMonitor.<PathPlannerPath>getFieldMonitor("originalPath",autoFPC);
+            FieldMonitor<Supplier<Pose2d>> poseSupplierMntr = FPCMonitor.<Supplier<Pose2d>>getFieldMonitor("poseSupplier",autoFPC);
+            FieldMonitor<Supplier<ChassisSpeeds>> speedsSupplierMntr = FPCMonitor.<Supplier<ChassisSpeeds>>getFieldMonitor("speedsSupplier",autoFPC);
+            FieldMonitor<BiConsumer<ChassisSpeeds, DriveFeedforwards>> outputMntr = FPCMonitor.<BiConsumer<ChassisSpeeds,DriveFeedforwards>>getFieldMonitor("output",autoFPC);
+            FieldMonitor<PathFollowingController> controllerMntr = FPCMonitor.<PathFollowingController>getFieldMonitor("controller", autoFPC);
+            FieldMonitor<RobotConfig> robotConfigMntr = FPCMonitor.<RobotConfig>getFieldMonitor("robotConfig",autoFPC);
+            FieldMonitor<BooleanSupplier> shouldFlipPathMntr = FPCMonitor.<BooleanSupplier>getFieldMonitor("shouldFlipPath",autoFPC);
+            FieldMonitor<EventScheduler> eventSchedulerMntr = FPCMonitor.<EventScheduler>getFieldMonitor("eventScheduler",autoFPC);
+            FieldMonitor<PathPlannerPath> pathMntr = FPCMonitor.<PathPlannerPath>getFieldMonitor("path",autoFPC);
+            FieldMonitor<PathPlannerTrajectory> trajectoryMntr = FPCMonitor.<PathPlannerTrajectory>getFieldMonitor("trajectory", autoFPC);
+            
+            Function<Double,PathPlannerTrajectoryState> sampleTrajectory = (Double time) -> {
+
+                if (time <= trajectoryMntr.get().getInitialState().timeSeconds) return trajectoryMntr.get().getInitialState();
+                if (time >= trajectoryMntr.get().getTotalTimeSeconds()) return trajectoryMntr.get().getEndState();
+
+                System.out.println("Calculating low and high");
+
+                int low = 1;
+                int high = trajectoryMntr.<List<PathPlannerTrajectoryState>>getSubMonitor("states").get().size() - 1;
+                while (low != high) {
+                    System.out.println("Running sampling loop");
+                    int mid = (low + high) / 2;
+                    System.out.println("Low: " + low);
+                    System.out.println("Mid: " + mid);
+                    System.out.println("High: " + high);
+                    if (trajectoryMntr.get().getState(mid).timeSeconds < time) {
+                        low = mid + 1;
+                    } else {
+                        high = mid;
+                    }
+                }
+
+                System.out.println("Getting Samples");
+                var sample = trajectoryMntr.get().getState(low);
+                var prevSample = trajectoryMntr.get().getState(low - 1);
+                System.out.println("States:");
+                List<PathPlannerTrajectoryState> states = trajectoryMntr.get().getStates();
+                trajectoryMntr.getClosure("")
+                for (var state : trajectoryMntr.get().getStates()){
+                    System.out.println(state.fieldSpeeds);
+                }
+                if (Math.abs(sample.timeSeconds - prevSample.timeSeconds) < 1E-3) {
+                    return sample;
+                }
+                System.out.println("time - prevSample.timeSeconds: " + (time - prevSample.timeSeconds));
+                System.out.println("sample.timeSeconds - prevSample.timeSeconds: " + (sample.timeSeconds - prevSample.timeSeconds));
+                System.out.println("Interpolating prevSample");
+                return prevSample.interpolate(sample, (time - prevSample.timeSeconds) / (sample.timeSeconds - prevSample.timeSeconds));
+            };
             @Override
             public void initialize() {
                 fpc.initialize();
             }
+
             @Override
             public void execute() {
-                traj.sample(timer.get());
+                System.out.println((double) Integer.MAX_VALUE);
+                double currentTime = timerMntr.get().get();
+                System.out.println("Sampling trajectory at " + currentTime);
+                var targetState = sampleTrajectory.apply(currentTime);
                 System.out.println("Sampled trajectory");
-                fpc.execute();
+                if (!controllerMntr.get().isHolonomic() && pathMntr.get().isReversed()) {
+                    targetState = targetState.reverse();
+                }
+
+                Pose2d currentPose = poseSupplierMntr.get().get();
+                ChassisSpeeds currentSpeeds = speedsSupplierMntr.get().get();
+
+                ChassisSpeeds targetSpeeds = controllerMntr.get().calculateRobotRelativeSpeeds(currentPose, targetState);
+
+                double currentVel = Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
+
+                PPLibTelemetry.setCurrentPose(currentPose);
+                PathPlannerLogging.logCurrentPose(currentPose);
+
+                PPLibTelemetry.setTargetPose(targetState.pose);
+                PathPlannerLogging.logTargetPose(targetState.pose);
+
+                PPLibTelemetry.setVelocities(
+                    currentVel,
+                    targetState.linearVelocity,
+                    currentSpeeds.omegaRadiansPerSecond,
+                    targetSpeeds.omegaRadiansPerSecond);
+
+                outputMntr.get().accept(targetSpeeds, targetState.feedforwards);
+
+                eventSchedulerMntr.get().execute(currentTime);
             }
+
             @Override
             public boolean isFinished(){
                 return fpc.isFinished();
