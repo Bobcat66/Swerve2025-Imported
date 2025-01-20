@@ -25,7 +25,6 @@ public final class DebugInstrumentator {
     private static DebugInstrumentator instance = null;
     private ClassPool pool;
     private CtClass csClass;
-    public DebugClassLoader classLoader;
 
     private DebugInstrumentator() {
         System.out.println("Initializing CommandScheduler Instrumentator");

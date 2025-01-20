@@ -8,6 +8,7 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.AutoConstants.ppConfig;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -30,10 +31,11 @@ import org.pihisamurai.frc2025.robot.subsystems.drive.GyroIOSim;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOHardware;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOSim;
 import org.pihisamurai.frc2025.robot.utils.Localization;
-import org.pihisamurai.lib.debug.FieldMonitor;
-import org.pihisamurai.lib.debug.PPDebugging;
-import org.pihisamurai.lib.debug.ReflectionDebugger;
-import org.pihisamurai.lib.debug.ClassMonitor;
+import org.pihisamurai.lib.debug.DebugLib.FieldMonitor;
+import org.pihisamurai.lib.debug.DebugLib.ObjectMonitor;
+import org.pihisamurai.lib.debug.DebugLib.PPDebugging;
+import org.pihisamurai.lib.debug.DebugLib.ReflectionDebugger;
+import org.pihisamurai.lib.debug.DebugLib.ReflectionDebugger.ClassMonitor;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.FollowPathCommand;
@@ -154,18 +156,18 @@ public class RobotContainer {
         return new Command(){
 
             FollowPathCommand fpc = autoFPC;
-
-            FieldMonitor<Timer> timerMntr = FPCMonitor.<Timer>getFieldMonitor("timer", autoFPC);
-            FieldMonitor<PathPlannerPath> originalPathMntr = FPCMonitor.<PathPlannerPath>getFieldMonitor("originalPath",autoFPC);
-            FieldMonitor<Supplier<Pose2d>> poseSupplierMntr = FPCMonitor.<Supplier<Pose2d>>getFieldMonitor("poseSupplier",autoFPC);
-            FieldMonitor<Supplier<ChassisSpeeds>> speedsSupplierMntr = FPCMonitor.<Supplier<ChassisSpeeds>>getFieldMonitor("speedsSupplier",autoFPC);
-            FieldMonitor<BiConsumer<ChassisSpeeds, DriveFeedforwards>> outputMntr = FPCMonitor.<BiConsumer<ChassisSpeeds,DriveFeedforwards>>getFieldMonitor("output",autoFPC);
-            FieldMonitor<PathFollowingController> controllerMntr = FPCMonitor.<PathFollowingController>getFieldMonitor("controller", autoFPC);
-            FieldMonitor<RobotConfig> robotConfigMntr = FPCMonitor.<RobotConfig>getFieldMonitor("robotConfig",autoFPC);
-            FieldMonitor<BooleanSupplier> shouldFlipPathMntr = FPCMonitor.<BooleanSupplier>getFieldMonitor("shouldFlipPath",autoFPC);
-            FieldMonitor<EventScheduler> eventSchedulerMntr = FPCMonitor.<EventScheduler>getFieldMonitor("eventScheduler",autoFPC);
-            FieldMonitor<PathPlannerPath> pathMntr = FPCMonitor.<PathPlannerPath>getFieldMonitor("path",autoFPC);
-            FieldMonitor<PathPlannerTrajectory> trajectoryMntr = FPCMonitor.<PathPlannerTrajectory>getFieldMonitor("trajectory", autoFPC);
+            
+            ObjectMonitor<Timer> timerMntr = FPCMonitor.<Timer>getObjectMonitorFromField("timer", autoFPC);
+            ObjectMonitor<PathPlannerPath> originalPathMntr = FPCMonitor.<PathPlannerPath>getObjectMonitorFromField("originalPath",autoFPC);
+            ObjectMonitor<Supplier<Pose2d>> poseSupplierMntr = FPCMonitor.<Supplier<Pose2d>>getObjectMonitorFromField("poseSupplier",autoFPC);
+            ObjectMonitor<Supplier<ChassisSpeeds>> speedsSupplierMntr = FPCMonitor.<Supplier<ChassisSpeeds>>getObjectMonitorFromField("speedsSupplier",autoFPC);
+            ObjectMonitor<BiConsumer<ChassisSpeeds, DriveFeedforwards>> outputMntr = FPCMonitor.<BiConsumer<ChassisSpeeds,DriveFeedforwards>>getObjectMonitorFromField("output",autoFPC);
+            ObjectMonitor<PathFollowingController> controllerMntr = FPCMonitor.<PathFollowingController>getObjectMonitorFromField("controller", autoFPC);
+            ObjectMonitor<RobotConfig> robotConfigMntr = FPCMonitor.<RobotConfig>getObjectMonitorFromField("robotConfig",autoFPC);
+            ObjectMonitor<BooleanSupplier> shouldFlipPathMntr = FPCMonitor.<BooleanSupplier>getObjectMonitorFromField("shouldFlipPath",autoFPC);
+            ObjectMonitor<EventScheduler> eventSchedulerMntr = FPCMonitor.<EventScheduler>getObjectMonitorFromField("eventScheduler",autoFPC);
+            ObjectMonitor<PathPlannerPath> pathMntr = FPCMonitor.<PathPlannerPath>getObjectMonitorFromField("path",autoFPC);
+            ObjectMonitor<PathPlannerTrajectory> trajectoryMntr = FPCMonitor.<PathPlannerTrajectory>getObjectMonitorFromField("trajectory", autoFPC);
             
             Function<Double,PathPlannerTrajectoryState> sampleTrajectory = (Double time) -> {
 
@@ -175,7 +177,7 @@ public class RobotContainer {
                 System.out.println("Calculating low and high");
 
                 int low = 1;
-                int high = trajectoryMntr.<List<PathPlannerTrajectoryState>>getSubMonitor("states").get().size() - 1;
+                int high = trajectoryMntr.<List<PathPlannerTrajectoryState>>getField("states").get().size() - 1;
                 while (low != high) {
                     System.out.println("Running sampling loop");
                     int mid = (low + high) / 2;
@@ -194,8 +196,8 @@ public class RobotContainer {
                 var prevSample = trajectoryMntr.get().getState(low - 1);
                 System.out.println("States:");
                 List<PathPlannerTrajectoryState> states = trajectoryMntr.get().getStates();
-                trajectoryMntr.getClosure("")
-                for (var state : trajectoryMntr.get().getStates()){
+                //trajectoryMntr.getStaticClosure("forwardAccelPass{List,RobotConfig}").invoke(states,ppConfig);
+                for (var state : states){
                     System.out.println(state.fieldSpeeds);
                 }
                 if (Math.abs(sample.timeSeconds - prevSample.timeSeconds) < 1E-3) {
