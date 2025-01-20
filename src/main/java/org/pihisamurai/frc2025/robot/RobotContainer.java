@@ -12,6 +12,8 @@ import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.AutoConstan
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
@@ -55,6 +57,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
@@ -145,6 +148,7 @@ public class RobotContainer {
      * Returns a modified PathPlannerAuto for debugging
      * @author Jesse Kane
      */
+    /* 
     private Command getDebugAutoCommand() { 
         PathPlannerAuto auto = new PathPlannerAuto("AUTO1");
         SequentialCommandGroup autoSCG = (SequentialCommandGroup)PPDebugging.getAutoCommand(auto);
@@ -153,7 +157,7 @@ public class RobotContainer {
         ClassMonitor FPCMonitor = ReflectionDebugger.getInstance().getClassMonitor(FollowPathCommand.class);
 
         
-        return new Command(){
+        return new Command() {
 
             FollowPathCommand fpc = autoFPC;
             
@@ -208,13 +212,25 @@ public class RobotContainer {
                 System.out.println("Interpolating prevSample");
                 return prevSample.interpolate(sample, (time - prevSample.timeSeconds) / (sample.timeSeconds - prevSample.timeSeconds));
             };
+
+            {
+                System.out.println("Executing command initialization block");
+                ObjectMonitor<CommandScheduler> csMntr = ObjectMonitor.of(CommandScheduler.getInstance());
+                csMntr.<Set<Command>>getField("m_scheduledCommands").get().remove(autoFPC);
+                csMntr.<Set<Command>>getField("m_endingCommands").get().remove(autoFPC);
+                csMntr.<Map<Subsystem,Command>>getField("m_requirements").get().keySet().removeAll(autoFPC.getRequirements());
+                addRequirements(m_drive);
+            }
+
             @Override
             public void initialize() {
-                fpc.initialize();
+                autoFPC.initialize();
             }
 
             @Override
             public void execute() {
+                //fpc.execute();
+                
                 System.out.println((double) Integer.MAX_VALUE);
                 double currentTime = timerMntr.get().get();
                 System.out.println("Sampling trajectory at " + currentTime);
@@ -228,6 +244,8 @@ public class RobotContainer {
                 ChassisSpeeds currentSpeeds = speedsSupplierMntr.get().get();
 
                 ChassisSpeeds targetSpeeds = controllerMntr.get().calculateRobotRelativeSpeeds(currentPose, targetState);
+
+                System.out.println("targetSpeeds: " + targetSpeeds);
 
                 double currentVel = Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
 
@@ -246,6 +264,7 @@ public class RobotContainer {
                 outputMntr.get().accept(targetSpeeds, targetState.feedforwards);
 
                 eventSchedulerMntr.get().execute(currentTime);
+                // 
             }
 
             @Override
@@ -258,6 +277,7 @@ public class RobotContainer {
             }
         };
     }
+    */
 
     /**
     * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -266,7 +286,8 @@ public class RobotContainer {
     */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        return getDebugAutoCommand();
+        //return getDebugAutoCommand();
+        return AutoBuilder.buildAuto("AUTO1");
         //return getDebugFollowPathCommand();
     }
 }

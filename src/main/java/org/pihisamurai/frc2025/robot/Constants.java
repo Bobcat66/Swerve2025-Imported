@@ -142,7 +142,7 @@ public final class Constants {
         public static class AutoConstants {
             public static final RobotConfig ppConfig = new RobotConfig(
                     100.0,
-                    1.0,
+                    0.010,
                     new ModuleConfig(
                             ModuleConstants.Common.Drive.WheelRadius,
                             ModuleConstants.Common.Drive.MaxModuleSpeed,
@@ -164,7 +164,7 @@ public final class Constants {
                 public static class Rot {
                     public static final double kP = 5.0;
                     public static final double kI = 0.0;
-                    public static final double kD = 0.0;
+                    public static final double kD = 0.00;
                 }
             }
         }
@@ -176,8 +176,8 @@ public final class Constants {
                     public static final double gearRatio = 6.75;
                     public static final double VoltageCompensation = 12;
                   
-                    public static final double MaxModuleSpeed = 5.0; //Maximum attainable module speed
-                    public static final double WheelRadius = Units.inchesToMeters(2); //Meters
+                    public static final double MaxModuleSpeed = 5.0; //Maximum attainable module speed (m/s)
+                    public static final double WheelRadius = 0.0508; //Meters
                     public static final double WheelCOF = 1.0; //Coefficient of friction
                     public static final double PositionConversionFactor = 2*WheelRadius*Math.PI/gearRatio; //Units: Meters
                     public static final double VelocityConversionFactor = PositionConversionFactor / 60; //Units: Meters per second
@@ -193,7 +193,7 @@ public final class Constants {
                     public static final double kA = 0.0;
 
                     //Physical constants
-                    public static final double MoI = 0.025; //Placeholder, run sysID characterization routine to find actual value
+                    public static final double MoI = 0.010; //Placeholder, run sysID characterization routine to find actual value
                 }
 
                 public static class Turn {
@@ -215,7 +215,7 @@ public final class Constants {
                     public static final double kA = 0.0;
 
                     //Physical constants
-                    public static final double MoI = 0.025; //Placeholder
+                    public static final double MoI = 0.010; //Placeholder
                 }
             }
 

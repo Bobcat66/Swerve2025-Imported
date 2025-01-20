@@ -108,6 +108,7 @@ public class DriveSubsystem extends SubsystemBase {
 
     /**Field-oriented Closed-Loop driving*/
     public void driveFO(ChassisSpeeds speeds){
+        //System.out.println("Driving field oriented " + speeds);
         speeds = ChassisSpeeds.fromFieldRelativeSpeeds(speeds, rawGyroRotation);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
@@ -124,13 +125,14 @@ public class DriveSubsystem extends SubsystemBase {
         System.out.println("Driving Chassis Oriented " + speeds);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
+        System.out.println("Desaturated wheel speeds: " + setpointStates[1]);
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(setpointStates[i]);
         }
         SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
         Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
         Logger.recordOutput("SwerveStates/Actual", actualStates);
-        System.out.println("Finished Driving Chassis Oriented");
+        //System.out.println("Finished Driving Chassis Oriented");
     }
 
     @Override

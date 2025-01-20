@@ -56,5 +56,9 @@
     "edu.wpi.first.math.proto.*",
     "edu.wpi.first.math.**.proto.*",
     "edu.wpi.first.math.**.struct.*",
-  ]
+],
+"zenMode.hideLineNumbers": true,
+"[search-result]": {
+    "editor.lineNumbers": "on"
+}
 }

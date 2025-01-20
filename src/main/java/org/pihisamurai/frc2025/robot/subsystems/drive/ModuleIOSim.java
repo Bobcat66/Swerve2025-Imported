@@ -122,10 +122,12 @@ public class ModuleIOSim implements ModuleIO {
 
     @Override
     public void updateInputs(ModuleIOInputs inputs) {
+        //System.out.println(driveEncoderSim.getVelocityConversionFactor());
 
         m_driveMotorModel.setInputVoltage(m_driveSim.getBusVoltage() * m_driveSim.getAppliedOutput());
         m_driveMotorModel.update(0.2);
-        m_driveSim.iterate(m_driveMotorModel.getAngularVelocityRPM() * Drive.PositionConversionFactor, m_driveSim.getBusVoltage(), 0.02);
+
+        m_driveSim.iterate(m_driveMotorModel.getAngularVelocityRPM() * Drive.VelocityConversionFactor * Drive.gearRatio, m_driveSim.getBusVoltage(), 0.02);
         inputs.drivePositionMeters = driveEncoderSim.getPosition();
         inputs.driveVelocityMetersPerSec = driveEncoderSim.getVelocity();
         inputs.driveAppliedVolts = m_driveSim.getBusVoltage() * m_driveSim.getAppliedOutput();
