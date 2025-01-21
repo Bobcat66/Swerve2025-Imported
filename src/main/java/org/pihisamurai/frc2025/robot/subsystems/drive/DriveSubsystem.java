@@ -40,7 +40,6 @@ public class DriveSubsystem extends SubsystemBase {
 
     private final SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation, lastModulePositions, new Pose2d());
     private final Vision vision;
-
     public DriveSubsystem(
         GyroIO gyroIO,
         ModuleIO FLModuleIO,
@@ -99,7 +98,9 @@ public class DriveSubsystem extends SubsystemBase {
 
     @AutoLogOutput(key = "Odometry/Robot")
     public Pose2d getPose(){
-        return poseEstimator.getEstimatedPosition();
+        Pose2d out = poseEstimator.getEstimatedPosition();
+        //System.out.println(out);
+        return out;
     }
 
     public void resetPose(Pose2d newPose){

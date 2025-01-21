@@ -95,14 +95,27 @@ public class RobotContainer {
             }
         }
 
-        m_drive = new DriveSubsystem(
-            new GyroIOSim(), 
-            new ModuleIOSim(ModuleConfig.FrontLeft), 
-            new ModuleIOSim(ModuleConfig.FrontRight), 
-            new ModuleIOSim(ModuleConfig.RearRight),
-            new ModuleIOSim(ModuleConfig.RearLeft),
-            m_vision
-        );
+        if (Akit.currentMode == 0) {
+            m_drive = new DriveSubsystem(
+                new GyroIOHardware(), 
+                new ModuleIOHardware(ModuleConfig.FrontLeft), 
+                new ModuleIOHardware(ModuleConfig.FrontRight), 
+                new ModuleIOHardware(ModuleConfig.RearRight),
+                new ModuleIOHardware(ModuleConfig.RearLeft),
+                m_vision
+            );
+        } else if (Akit.currentMode == 1) {
+            m_drive = new DriveSubsystem(
+                new GyroIOSim(), 
+                new ModuleIOSim(ModuleConfig.FrontLeft), 
+                new ModuleIOSim(ModuleConfig.FrontRight), 
+                new ModuleIOSim(ModuleConfig.RearRight),
+                new ModuleIOSim(ModuleConfig.RearLeft),
+                m_vision
+            );
+        }
+
+        
 
         configureBindings();
     }
