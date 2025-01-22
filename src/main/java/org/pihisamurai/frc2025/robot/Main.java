@@ -4,13 +4,6 @@
 
 package org.pihisamurai.frc2025.robot;
 
-import java.lang.instrument.Instrumentation;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.function.Supplier;
-
-import org.pihisamurai.lib.debug.DebugInstrumentator;
-
 import edu.wpi.first.wpilibj.RobotBase;
 
 /**
@@ -27,9 +20,7 @@ public final class Main {
     * <p>If you change your main robot class, change the parameter type.
     */
     public static void main(String... args) {
-        //DebugInstrumentator.getInstance().testInstrumentation();
-        //DebugInstrumentator.getInstance().load();
-        //System.out.println("INSTRUMENTATION LOADED");
+        
         RobotBase.startRobot(Robot::new);
         
     }

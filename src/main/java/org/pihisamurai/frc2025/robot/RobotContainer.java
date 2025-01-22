@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 import org.pihisamurai.frc2025.robot.Constants.Akit;
 import org.pihisamurai.frc2025.robot.Constants.OIConstants;
@@ -95,6 +96,8 @@ public class RobotContainer {
             }
         }
 
+        System.out.println("Making Drive Subsystem");
+
         if (Akit.currentMode == 0) {
             m_drive = new DriveSubsystem(
                 new GyroIOHardware(), 
@@ -116,7 +119,7 @@ public class RobotContainer {
         }
 
         
-
+        //System.out.println("CONFIGBININF");
         configureBindings();
     }
 
@@ -130,6 +133,7 @@ public class RobotContainer {
     * joysticks}.
     */
     private void configureBindings() {
+        //System.out.println("CONFBINDINGS");
 
         //Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
         Pose2d targetPose = Localization.getClosestReefFace(m_drive.getPose()).AprilTag;
@@ -148,19 +152,54 @@ public class RobotContainer {
             // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
             // cancelling on release.
 
-        m_driverController.b().whileTrue(new PathPlannerAuto("AUTO1"));
-        m_driverController.a().whileTrue(AutoBuilder.pathfindToPose(
-            targetPose,
-            constraints,
-            0.0
-        ));
-
     }
 
     /**
      * Returns a modified PathPlannerAuto for debugging
      * @author Jesse Kane
      */
+    private Command getDebugAutoCommand() {
+        return new Command() {
+            Logger LOGGER = Logger.getLogger("Auto Command");
+            PathPlannerPath autoPath;
+            Command autoCommand;
+
+            {
+                LOGGER.info("INIT AUTO COMMAND");
+                try {
+                    autoPath = PathPlannerPath.fromPathFile("PATH1");
+                    PathPlannerTrajectory traj = new PathPlannerTrajectory(autoPath,m_drive.getChassisSpeeds(),m_drive.getPose().getRotation(),ppConfig);
+                    LOGGER.info("TOTAL TIME: " + traj.getTotalTimeSeconds());
+                    autoCommand = AutoBuilder.followPath(autoPath);
+                    addRequirements(autoCommand.getRequirements());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void initialize(){
+                LOGGER.info("Initializing");
+                autoCommand.initialize();
+            }
+            @Override
+            public void execute(){
+                //System.out.println(ObjectMonitor.of(autoCommand).<Sequentia>getField("trajectory"))
+                LOGGER.info("Executing");
+                autoCommand.execute();
+            }
+            @Override
+            public void end(boolean interrupted) {
+                LOGGER.info("Ending");
+                System.out.println(autoCommand.isFinished());
+                autoCommand.end(interrupted);
+            }
+            @Override
+            public boolean isFinished(){
+                return autoCommand.isFinished();
+            }
+        };
+    }
     /* 
     private Command getDebugAutoCommand() { 
         PathPlannerAuto auto = new PathPlannerAuto("AUTO1");
@@ -290,7 +329,7 @@ public class RobotContainer {
             }
         };
     }
-    */
+    // */
 
     /**
     * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -299,7 +338,7 @@ public class RobotContainer {
     */
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
-        //return getDebugAutoCommand();
+        // return getDebugAutoCommand();
         return AutoBuilder.buildAuto("AUTO1");
         //return getDebugFollowPathCommand();
     }

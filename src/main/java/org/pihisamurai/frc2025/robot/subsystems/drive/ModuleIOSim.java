@@ -156,7 +156,8 @@ public class ModuleIOSim implements ModuleIO {
             ControlType.kVelocity,
             driveSimSlot,
             FFVolts,
-            ArbFFUnits.kVoltage);
+            ArbFFUnits.kVoltage
+        );
     }
 
     @Override

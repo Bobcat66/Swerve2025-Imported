@@ -62,10 +62,10 @@ public class DriveSubsystem extends SubsystemBase {
         //DriveFeedforwards
         
         AutoBuilder.configure(
-            () -> {System.out.println("getPose called by pp");Pose2d output = getPose();System.out.println("Pose retrieved");return output;},//this::getPose,
-            (pose) -> {System.out.println("resetPose called by pp");resetPose(pose);},
-            () -> {System.out.println("getChassisSpeeds called by pp");ChassisSpeeds speeds = getChassisSpeeds();System.out.println("Speeds retrieved");return speeds;},
-            (ChassisSpeeds speeds, DriveFeedforwards ff) -> {System.out.println("driveCO called by pp");driveCO(speeds);},
+            this::getPose,
+            this::resetPose,
+            this::getChassisSpeeds,
+            (ChassisSpeeds speeds, DriveFeedforwards ff) -> driveCO(speeds),
             new PPHolonomicDriveController(
                 new PIDConstants(
                     PIDControl.Trans.kP,
@@ -123,10 +123,9 @@ public class DriveSubsystem extends SubsystemBase {
 
     /** Chassis-oriented Closed-loop driving */
     public void driveCO(ChassisSpeeds speeds) {
-        System.out.println("Driving Chassis Oriented " + speeds);
+        //System.out.println("Driving Chassis Oriented " + speeds);
         SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(ChassisSpeeds.discretize(speeds, 0.02));
         SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates,MaxModuleSpeed);
-        System.out.println("Desaturated wheel speeds: " + setpointStates[1]);
         for (int i = 0; i < 4; i++) {
             modules[i].setDesiredState(setpointStates[i]);
         }

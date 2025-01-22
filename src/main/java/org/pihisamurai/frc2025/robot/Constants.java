@@ -121,7 +121,7 @@ public final class Constants {
         public static final int odometryFrequencyHz = 250;
         public static final double wheelBase = Units.inchesToMeters(27.5); //Meters
         public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
-        public static final double maxTranslationSpeed = Units.feetToMeters(1); //meters per second
+        public static final double maxTranslationSpeed = Units.feetToMeters(13); //meters per second
         public static final double maxRotationSpeed = 0.5; // Radians Per Second
         public static final double singleClutchTranslationFactor = 0.5;
         public static final double singleClutchRotationFactor = 0.5;
@@ -147,7 +147,7 @@ public final class Constants {
                             ModuleConstants.Common.Drive.WheelRadius,
                             ModuleConstants.Common.Drive.MaxModuleSpeed,
                             ModuleConstants.Common.Drive.WheelCOF,
-                            DCMotor.getNEO(1),
+                            DCMotor.getNEO(1).withReduction(ModuleConstants.Common.Drive.gearRatio),
                             ModuleConstants.Common.Drive.CurrentLimit,
                             1
                     ),
