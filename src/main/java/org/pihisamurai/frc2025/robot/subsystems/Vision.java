@@ -1,6 +1,5 @@
 package org.pihisamurai.frc2025.robot.subsystems;
 
-import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.ReefFace;
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kFallbackStrategy;
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kMultiTagDefaultStdDevs;

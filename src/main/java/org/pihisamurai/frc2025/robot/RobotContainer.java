@@ -8,6 +8,10 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.doubleClutchRotationFactor;
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.doubleClutchTranslationFactor;
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.singleClutchRotationFactor;
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.singleClutchTranslationFactor;
 import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.AutoConstants.ppConfig;
 
 import java.lang.reflect.Field;
@@ -21,11 +25,17 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import org.pihisamurai.frc2025.robot.Constants.Akit;
+import org.pihisamurai.frc2025.robot.Constants.DriveConstants;
 import org.pihisamurai.frc2025.robot.Constants.OIConstants;
+import org.pihisamurai.frc2025.robot.Constants.DriveConstants.TeleopDriveMode;
 import org.pihisamurai.frc2025.robot.Constants.DriveConstants.ModuleConstants.ModuleConfig;
+import org.pihisamurai.frc2025.robot.Constants.FieldConstants.PointOfInterest;
+import org.pihisamurai.frc2025.robot.Constants.FieldConstants.PoseOfInterest;
 import org.pihisamurai.frc2025.robot.Constants.VisionConstants.CamConfig;
 import org.pihisamurai.frc2025.robot.commands.ExampleCommand;
-import org.pihisamurai.frc2025.robot.commands.drive.DriveClosedLoopTeleop;
+import org.pihisamurai.frc2025.robot.commands.drive.DirectDriveToNearestBranch;
+import org.pihisamurai.frc2025.robot.commands.drive.TeleopDriveCommand;
+//import org.pihisamurai.frc2025.robot.commands.drive.DriveClosedLoopTeleop;
 import org.pihisamurai.frc2025.robot.subsystems.ExampleSubsystem;
 import org.pihisamurai.frc2025.robot.subsystems.Vision;
 import org.pihisamurai.frc2025.robot.subsystems.drive.DriveSubsystem;
@@ -56,6 +66,7 @@ import com.pathplanner.lib.util.PathPlannerLogging;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
@@ -64,8 +75,12 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Pose2d;
 
 /**
@@ -83,8 +98,9 @@ public class RobotContainer {
     private final DriveSubsystem m_drive;
 
     // Replace with CommandPS4Controller or CommandJoystick if needed
-    private final CommandXboxController m_driverController =
-        new CommandXboxController(OIConstants.Driver.kDriverControllerPort);
+    private final CommandXboxController m_driverController = new CommandXboxController(OIConstants.Driver.kDriverControllerPort);
+
+    private final TeleopDriveCommand teleopDrive;
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     @SuppressWarnings("unused")
@@ -95,8 +111,6 @@ public class RobotContainer {
                 m_vision.addCamera(config);
             }
         }
-
-        System.out.println("Making Drive Subsystem");
 
         if (Akit.currentMode == 0) {
             m_drive = new DriveSubsystem(
@@ -118,8 +132,16 @@ public class RobotContainer {
             );
         }
 
+        teleopDrive = m_drive.CommandBuilder.driveTeleop(
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
+            () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
+            TeleopDriveMode.kClosedLoopFieldOriented,
+            1.0,
+            1.0,
+            null
+        );
         
-        //System.out.println("CONFIGBININF");
         configureBindings();
     }
 
@@ -139,197 +161,66 @@ public class RobotContainer {
         Pose2d targetPose = Localization.getClosestReefFace(m_drive.getPose()).AprilTag;
         PathConstraints constraints = new PathConstraints(MetersPerSecond.of(5), MetersPerSecondPerSecond.of(5), RadiansPerSecond.of(5), RadiansPerSecondPerSecond.of(5));
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-        new Trigger(m_exampleSubsystem::exampleCondition)
-            .onTrue(new ExampleCommand(m_exampleSubsystem));
 
-        m_drive.setDefaultCommand(new DriveClosedLoopTeleop(
-            () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
-            () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), OIConstants.Driver.kControllerDeadband),
-            () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
-            () -> m_driverController.rightBumper().getAsBoolean(),
-            () -> m_driverController.leftBumper().getAsBoolean(),
-            m_drive));
-            // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-            // cancelling on release.
+        m_drive.setDefaultCommand(teleopDrive);
 
-    }
-
-    /**
-     * Returns a modified PathPlannerAuto for debugging
-     * @author Jesse Kane
-     */
-    private Command getDebugAutoCommand() {
-        return new Command() {
-            Logger LOGGER = Logger.getLogger("Auto Command");
-            PathPlannerPath autoPath;
-            Command autoCommand;
-
-            {
-                LOGGER.info("INIT AUTO COMMAND");
-                try {
-                    autoPath = PathPlannerPath.fromPathFile("PATH1");
-                    PathPlannerTrajectory traj = new PathPlannerTrajectory(autoPath,m_drive.getChassisSpeeds(),m_drive.getPose().getRotation(),ppConfig);
-                    LOGGER.info("TOTAL TIME: " + traj.getTotalTimeSeconds());
-                    autoCommand = AutoBuilder.followPath(autoPath);
-                    addRequirements(autoCommand.getRequirements());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void initialize(){
-                LOGGER.info("Initializing");
-                autoCommand.initialize();
-            }
-            @Override
-            public void execute(){
-                //System.out.println(ObjectMonitor.of(autoCommand).<Sequentia>getField("trajectory"))
-                LOGGER.info("Executing");
-                autoCommand.execute();
-            }
-            @Override
-            public void end(boolean interrupted) {
-                LOGGER.info("Ending");
-                System.out.println(autoCommand.isFinished());
-                autoCommand.end(interrupted);
-            }
-            @Override
-            public boolean isFinished(){
-                return autoCommand.isFinished();
-            }
-        };
-    }
-    /* 
-    private Command getDebugAutoCommand() { 
-        PathPlannerAuto auto = new PathPlannerAuto("AUTO1");
-        SequentialCommandGroup autoSCG = (SequentialCommandGroup)PPDebugging.getAutoCommand(auto);
-        FollowPathCommand autoFPC = (FollowPathCommand)PPDebugging.getNthCommandFromSCG(autoSCG, 0).get();
-        PathPlannerTrajectory trajectory = PPDebugging.getTrajectoryFromFPC(autoFPC);
-        ClassMonitor FPCMonitor = ReflectionDebugger.getInstance().getClassMonitor(FollowPathCommand.class);
+        m_driverController.rightBumper()
+            .onTrue(new InstantCommand(() -> teleopDrive.applyClutchFactors(doubleClutchTranslationFactor, doubleClutchRotationFactor)))
+            .onFalse(new InstantCommand(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
 
         
-        return new Command() {
+        m_driverController.leftBumper()
+            .onTrue(new InstantCommand(() -> teleopDrive.applyClutchFactors(singleClutchTranslationFactor, singleClutchRotationFactor)))
+            .onFalse(new InstantCommand(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
 
-            FollowPathCommand fpc = autoFPC;
-            
-            ObjectMonitor<Timer> timerMntr = FPCMonitor.<Timer>getObjectMonitorFromField("timer", autoFPC);
-            ObjectMonitor<PathPlannerPath> originalPathMntr = FPCMonitor.<PathPlannerPath>getObjectMonitorFromField("originalPath",autoFPC);
-            ObjectMonitor<Supplier<Pose2d>> poseSupplierMntr = FPCMonitor.<Supplier<Pose2d>>getObjectMonitorFromField("poseSupplier",autoFPC);
-            ObjectMonitor<Supplier<ChassisSpeeds>> speedsSupplierMntr = FPCMonitor.<Supplier<ChassisSpeeds>>getObjectMonitorFromField("speedsSupplier",autoFPC);
-            ObjectMonitor<BiConsumer<ChassisSpeeds, DriveFeedforwards>> outputMntr = FPCMonitor.<BiConsumer<ChassisSpeeds,DriveFeedforwards>>getObjectMonitorFromField("output",autoFPC);
-            ObjectMonitor<PathFollowingController> controllerMntr = FPCMonitor.<PathFollowingController>getObjectMonitorFromField("controller", autoFPC);
-            ObjectMonitor<RobotConfig> robotConfigMntr = FPCMonitor.<RobotConfig>getObjectMonitorFromField("robotConfig",autoFPC);
-            ObjectMonitor<BooleanSupplier> shouldFlipPathMntr = FPCMonitor.<BooleanSupplier>getObjectMonitorFromField("shouldFlipPath",autoFPC);
-            ObjectMonitor<EventScheduler> eventSchedulerMntr = FPCMonitor.<EventScheduler>getObjectMonitorFromField("eventScheduler",autoFPC);
-            ObjectMonitor<PathPlannerPath> pathMntr = FPCMonitor.<PathPlannerPath>getObjectMonitorFromField("path",autoFPC);
-            ObjectMonitor<PathPlannerTrajectory> trajectoryMntr = FPCMonitor.<PathPlannerTrajectory>getObjectMonitorFromField("trajectory", autoFPC);
-            
-            Function<Double,PathPlannerTrajectoryState> sampleTrajectory = (Double time) -> {
+        m_driverController.leftTrigger(OIConstants.Driver.kControllerTriggerThreshold).whileTrue(m_drive.CommandBuilder.directDriveToNearestBranch(true, new Transform2d(0.4572, 0, Rotation2d.fromDegrees(0))));
 
-                if (time <= trajectoryMntr.get().getInitialState().timeSeconds) return trajectoryMntr.get().getInitialState();
-                if (time >= trajectoryMntr.get().getTotalTimeSeconds()) return trajectoryMntr.get().getEndState();
+        m_driverController.rightTrigger(OIConstants.Driver.kControllerTriggerThreshold).whileTrue(m_drive.CommandBuilder.directDriveToNearestBranch(false, new Transform2d(0.4572, 0, Rotation2d.fromDegrees(0))));
 
-                System.out.println("Calculating low and high");
-
-                int low = 1;
-                int high = trajectoryMntr.<List<PathPlannerTrajectoryState>>getField("states").get().size() - 1;
-                while (low != high) {
-                    System.out.println("Running sampling loop");
-                    int mid = (low + high) / 2;
-                    System.out.println("Low: " + low);
-                    System.out.println("Mid: " + mid);
-                    System.out.println("High: " + high);
-                    if (trajectoryMntr.get().getState(mid).timeSeconds < time) {
-                        low = mid + 1;
-                    } else {
-                        high = mid;
+        //Drives with the heading locked to point towards the center of the alliance reef
+        m_driverController.a()
+            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+                DriverStation.getAlliance().get() == Alliance.Blue 
+                    ? () -> {
+                        Translation2d teamReef = PointOfInterest.BLU_REEF.position;
+                        Rotation2d angleToReef = teamReef.minus(m_drive.getPose().getTranslation()).getAngle();
+                        return angleToReef.rotateBy(Rotation2d.fromDegrees(180));
                     }
-                }
+                    : () -> {
+                        Translation2d teamReef = PointOfInterest.RED_REEF.position;
+                        Rotation2d angleToReef = teamReef.minus(m_drive.getPose().getTranslation()).getAngle();
+                        return angleToReef.rotateBy(Rotation2d.fromDegrees(180));
+                    }
+            )))
+            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+        
+        //Drives with heading locked to align with processor-side coral station
+        m_driverController.b()
+            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+                DriverStation.getAlliance().get() == Alliance.Blue
+                    ? PoseOfInterest.BLU_CORAL_STATION_PROCESSOR.pose.getRotation()
+                    : PoseOfInterest.RED_CORAL_STATION_PROCESSOR.pose.getRotation()
+            )))
+            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
 
-                System.out.println("Getting Samples");
-                var sample = trajectoryMntr.get().getState(low);
-                var prevSample = trajectoryMntr.get().getState(low - 1);
-                System.out.println("States:");
-                List<PathPlannerTrajectoryState> states = trajectoryMntr.get().getStates();
-                //trajectoryMntr.getStaticClosure("forwardAccelPass{List,RobotConfig}").invoke(states,ppConfig);
-                for (var state : states){
-                    System.out.println(state.fieldSpeeds);
-                }
-                if (Math.abs(sample.timeSeconds - prevSample.timeSeconds) < 1E-3) {
-                    return sample;
-                }
-                System.out.println("time - prevSample.timeSeconds: " + (time - prevSample.timeSeconds));
-                System.out.println("sample.timeSeconds - prevSample.timeSeconds: " + (sample.timeSeconds - prevSample.timeSeconds));
-                System.out.println("Interpolating prevSample");
-                return prevSample.interpolate(sample, (time - prevSample.timeSeconds) / (sample.timeSeconds - prevSample.timeSeconds));
-            };
-
-            {
-                System.out.println("Executing command initialization block");
-                ObjectMonitor<CommandScheduler> csMntr = ObjectMonitor.of(CommandScheduler.getInstance());
-                csMntr.<Set<Command>>getField("m_scheduledCommands").get().remove(autoFPC);
-                csMntr.<Set<Command>>getField("m_endingCommands").get().remove(autoFPC);
-                csMntr.<Map<Subsystem,Command>>getField("m_requirements").get().keySet().removeAll(autoFPC.getRequirements());
-                addRequirements(m_drive);
-            }
-
-            @Override
-            public void initialize() {
-                autoFPC.initialize();
-            }
-
-            @Override
-            public void execute() {
-                //fpc.execute();
-                
-                System.out.println((double) Integer.MAX_VALUE);
-                double currentTime = timerMntr.get().get();
-                System.out.println("Sampling trajectory at " + currentTime);
-                var targetState = sampleTrajectory.apply(currentTime);
-                System.out.println("Sampled trajectory");
-                if (!controllerMntr.get().isHolonomic() && pathMntr.get().isReversed()) {
-                    targetState = targetState.reverse();
-                }
-
-                Pose2d currentPose = poseSupplierMntr.get().get();
-                ChassisSpeeds currentSpeeds = speedsSupplierMntr.get().get();
-
-                ChassisSpeeds targetSpeeds = controllerMntr.get().calculateRobotRelativeSpeeds(currentPose, targetState);
-
-                System.out.println("targetSpeeds: " + targetSpeeds);
-
-                double currentVel = Math.hypot(currentSpeeds.vxMetersPerSecond, currentSpeeds.vyMetersPerSecond);
-
-                PPLibTelemetry.setCurrentPose(currentPose);
-                PathPlannerLogging.logCurrentPose(currentPose);
-
-                PPLibTelemetry.setTargetPose(targetState.pose);
-                PathPlannerLogging.logTargetPose(targetState.pose);
-
-                PPLibTelemetry.setVelocities(
-                    currentVel,
-                    targetState.linearVelocity,
-                    currentSpeeds.omegaRadiansPerSecond,
-                    targetSpeeds.omegaRadiansPerSecond);
-
-                outputMntr.get().accept(targetSpeeds, targetState.feedforwards);
-
-                eventSchedulerMntr.get().execute(currentTime);
-                // 
-            }
-
-            @Override
-            public boolean isFinished(){
-                return fpc.isFinished();
-            }
-            @Override
-            public void end(boolean interrupted){
-                fpc.end(interrupted);
-            }
-        };
+        //Drives with heading locked to align with opposite-side coral station
+        m_driverController.x()
+            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+                DriverStation.getAlliance().get() == Alliance.Blue
+                    ? PoseOfInterest.BLU_CORAL_STATION_OPPOSITE.pose.getRotation()
+                    : PoseOfInterest.RED_CORAL_STATION_OPPOSITE.pose.getRotation()
+            )))
+            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+        
+        //Drives with heading locked to align straight forward
+        m_driverController.y()
+            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+                DriverStation.getAlliance().get() == Alliance.Blue
+                    ? Rotation2d.fromDegrees(0)
+                    : Rotation2d.fromDegrees(180)
+            )))
+            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
     }
-    // */
 
     /**
     * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -339,7 +230,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         // An example command will be run in autonomous
         // return getDebugAutoCommand();
-        return AutoBuilder.buildAuto("AUTO1");
+        return m_drive.CommandBuilder.directDriveToNearestBranch(true, new Transform2d(0.4572, 0, Rotation2d.fromDegrees(0)));
         //return getDebugFollowPathCommand();
     }
 }

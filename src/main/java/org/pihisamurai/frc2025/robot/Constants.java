@@ -10,6 +10,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -22,6 +23,11 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.math.Matrix;
+
+import static edu.wpi.first.units.Units.MetersPerSecond;
+import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -73,6 +79,17 @@ public final class Constants {
             public static final Matrix<N3, N1> kMultiTagDefaultStdDevs = VecBuilder.fill(0.5, 0.5, 1);
         }
 
+    }
+    
+
+    public static class Akit {
+        //0 = real, 1 = Sim, 2 = replay
+        //If statements that evaluate this constant expression are used to implement C-style 
+        public static final int currentMode = 1;
+    }
+      
+    /** Contains data about the field */
+    public static class FieldConstants {
         /**
          * @description Provides coordinates for april tags
          * @description See https://docs.google.com/spreadsheets/d/1mz5djBDrFm8Ro_M04Yq4eea92x4Xyj_pqlt54wsXnxA/edit?usp=sharing
@@ -94,30 +111,47 @@ public final class Constants {
             RED_REEF_FE(9, 12.643358, 4.745482, 120.0, 12.780, 4.830, 12.510, 4.680),
             RED_REEF_GH(10, 12.227306, 4.025900, 180.0, 12.220, 4.190, 12.220, 3.850),
             RED_REEF_IJ(11, 12.643358, 3.306318, 240.0, 12.490, 3.360, 12.790, 3.210);
-        
 
-            public final Translation2d leftBranch;
-            public final Translation2d rightBranch;
+
+            public final Pose2d leftBranch;
+            public final Pose2d rightBranch;
             public final Pose2d AprilTag;
             public final int AprilTagID;
-        
+
             private ReefFace(int AprilTagID, double AT_x, double AT_y, double AT_theta, double L_x, double L_y, double R_x, double R_y) {
                 this.AprilTagID = AprilTagID;
                 this.AprilTag = new Pose2d(AT_x, AT_y, Rotation2d.fromDegrees(AT_theta));
-                this.leftBranch = new Translation2d(L_x, L_y);
-                this.rightBranch = new Translation2d(R_x, R_y);
+                this.leftBranch = new Pose2d(L_x, L_y,Rotation2d.fromDegrees(AT_theta));
+                this.rightBranch = new Pose2d(R_x, R_y,Rotation2d.fromDegrees(AT_theta));
+            }
+        }
+
+        //Generic rotation-agnostic points of interest
+        public enum PointOfInterest {
+            BLU_REEF(4.487,4.010),
+            RED_REEF(13.062,4.010);
+
+            public final Translation2d position;
+            private PointOfInterest(double xMeters, double yMeters) {
+                this.position = new Translation2d(xMeters,yMeters);
+            }
+        }
+
+        //Poses of interest
+        public enum PoseOfInterest {
+            BLU_PROCESSOR(0,0,0), //Placeholder
+            RED_PROCESSOR(0,0,0), //Placeholder
+            BLU_CORAL_STATION_PROCESSOR(Units.inchesToMeters(33.51),Units.inchesToMeters(25.80),54),
+            BLU_CORAL_STATION_OPPOSITE(Units.inchesToMeters(33.51),Units.inchesToMeters(291.20),306),
+            RED_CORAL_STATION_PROCESSOR(Units.inchesToMeters(657.37),Units.inchesToMeters(291.20),-125),
+            RED_CORAL_STATION_OPPOSITE(Units.inchesToMeters(657.37),Units.inchesToMeters(25.80),125);
+
+            public final Pose2d pose;
+            private PoseOfInterest(double xMeters, double yMeters, double omegaDeg) {
+                this.pose = new Pose2d(xMeters,yMeters,Rotation2d.fromDegrees(omegaDeg));
             }
         }
     }
-    
-
-    public static class Akit {
-        //0 = real, 1 = Sim, 2 = replay
-        //If statements that evaluate this constant expression are used to implement C-style 
-        public static final int currentMode = 0;
-    }
-      
-    
 
     public static class DriveConstants {
         public static final int odometryFrequencyHz = 250;
@@ -136,6 +170,13 @@ public final class Constants {
                 new Translation2d(-trackWidth / 2.0, wheelBase / 2.0),
                 new Translation2d(-trackWidth / 2.0, -wheelBase / 2.0)
         };
+
+        public static enum TeleopDriveMode {
+            kClosedLoopFieldOriented,
+            kClosedLoopChassisOriented,
+            kOpenLoopFieldOriented,
+            kOpenLoopChassisOriented
+        }
 
         public static class GyroConstants {
             public static final int kGyroPort = 9;
@@ -156,6 +197,14 @@ public final class Constants {
                     moduleTranslations
             );
 
+            public static final PathConstraints pathConstraints = new PathConstraints(
+                MetersPerSecond.of(5), 
+                MetersPerSecondPerSecond.of(5), 
+                RadiansPerSecond.of(5), 
+                RadiansPerSecondPerSecond.of(5)
+            );
+        
+
             public static class PIDControl {
                 public static class Trans {
                     public static final double kP = 5.0;
@@ -164,7 +213,7 @@ public final class Constants {
                 }
 
                 public static class Rot {
-                    public static final double kP = 5.0;
+                    public static final double kP = 6.0;
                     public static final double kI = 0.0;
                     public static final double kD = 0.00;
                 }

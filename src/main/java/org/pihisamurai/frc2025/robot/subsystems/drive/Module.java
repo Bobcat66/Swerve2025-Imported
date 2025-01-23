@@ -39,6 +39,16 @@ public class Module {
         );
     }
 
+    /* Sets desired state in open-loop mode */
+    public void setDesiredStateOpenLoop(SwerveModuleState state){
+        state.optimize(inputs.turnPosition);
+        io.setDriveVolts(driveFFController.calculate(state.speedMetersPerSecond));
+        io.setTurnPosition(
+            state.angle.getRotations(),
+            0
+        );
+    }
+
     /*Sets desired state with overridden Feedforward */
     public void setDesiredState(SwerveModuleState state, double driveFFVolts, double turnFFVolts){
         //io.updateInputs(inputs); //Fetches latest data from IO layer
