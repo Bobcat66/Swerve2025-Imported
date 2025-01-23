@@ -73,6 +73,7 @@ public class Vision {
         for (CamStruct cam : Cameras.values()) {
             Optional<EstimatedRobotPose> estimatedPose = getPoseEstimate(cam);
             if (estimatedPose.isPresent()){
+                System.out.println(estimatedPose.get().estimatedPose);
                 measurementConsumer.accept(
                     estimatedPose.get().estimatedPose.toPose2d(), 
                     estimatedPose.get().timestampSeconds, 

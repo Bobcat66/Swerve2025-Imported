@@ -112,7 +112,7 @@ public final class Constants {
     public static class Akit {
         //0 = real, 1 = Sim, 2 = replay
         //If statements that evaluate this constant expression are used to implement C-style 
-        public static final int currentMode = 1;
+        public static final int currentMode = 0;
     }
       
     
@@ -122,7 +122,7 @@ public final class Constants {
         public static final double wheelBase = Units.inchesToMeters(27.5); //Meters
         public static final double trackWidth = Units.inchesToMeters(19.5); //Meters
         public static final double maxTranslationSpeed = Units.feetToMeters(13); //meters per second
-        public static final double maxRotationSpeed = 0.5; // Radians Per Second
+        public static final double maxRotationSpeed = 5; // Radians Per Second
         public static final double singleClutchTranslationFactor = 0.5;
         public static final double singleClutchRotationFactor = 0.5;
         public static final double doubleClutchTranslationFactor = 0.3;
