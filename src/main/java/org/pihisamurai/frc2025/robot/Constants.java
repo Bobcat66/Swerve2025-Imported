@@ -4,6 +4,8 @@
 
 package org.pihisamurai.frc2025.robot;
 
+import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.moduleTranslations;
+
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import com.pathplanner.lib.config.ModuleConfig;
@@ -40,8 +42,8 @@ public final class Constants {
 
     public static class VisionConstants {
         public static enum CamConfig {
-            LEFT_ARDUCAM("PLACEHOLDER_0", 0, 0, 0, 0, 0, 0),
-            RIGHT_ARDUCAM("PLACEHOLDER_1", 0, 0, 0, 0, 0, 0);
+            LEFT_ARDUCAM("FLMOD_CAM", DriveConstants.moduleTranslations[0].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(6), 0, 0, Math.PI/4),
+            RIGHT_ARDUCAM("FRMOD_CAM", DriveConstants.moduleTranslations[2].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(6), 0, 0, 0);
 
             public final String name;
             public final double x;
