@@ -43,32 +43,10 @@ import org.pihisamurai.frc2025.robot.subsystems.drive.GyroIOSim;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOHardware;
 import org.pihisamurai.frc2025.robot.subsystems.drive.ModuleIOSim;
 import org.pihisamurai.frc2025.robot.utils.Localization;
-import org.pihisamurai.lib.debug.DebugLib.FieldMonitor;
-import org.pihisamurai.lib.debug.DebugLib.ObjectMonitor;
-import org.pihisamurai.lib.debug.DebugLib.PPDebugging;
-import org.pihisamurai.lib.debug.DebugLib.ReflectionDebugger;
-import org.pihisamurai.lib.debug.DebugLib.ReflectionDebugger.ClassMonitor;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PathFollowingController;
-import com.pathplanner.lib.events.EventScheduler;
 import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectory;
-import com.pathplanner.lib.trajectory.PathPlannerTrajectoryState;
-import com.pathplanner.lib.util.DriveFeedforwards;
-import com.pathplanner.lib.util.PPLibTelemetry;
-import com.pathplanner.lib.util.PathPlannerLogging;
-
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.math.MathUtil;
@@ -76,9 +54,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Pose2d;
 
@@ -164,13 +140,13 @@ public class RobotContainer {
         m_drive.setDefaultCommand(teleopDrive);
 
         m_driverController.rightBumper()
-            .onTrue(new InstantCommand(() -> teleopDrive.applyClutchFactors(doubleClutchTranslationFactor, doubleClutchRotationFactor)))
-            .onFalse(new InstantCommand(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
+            .onTrue(Commands.runOnce(() -> teleopDrive.applyClutchFactors(doubleClutchTranslationFactor, doubleClutchRotationFactor)))
+            .onFalse(Commands.runOnce(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
 
         
         m_driverController.leftBumper()
-            .onTrue(new InstantCommand(() -> teleopDrive.applyClutchFactors(singleClutchTranslationFactor, singleClutchRotationFactor)))
-            .onFalse(new InstantCommand(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
+            .onTrue(Commands.runOnce(() -> teleopDrive.applyClutchFactors(singleClutchTranslationFactor, singleClutchRotationFactor)))
+            .onFalse(Commands.runOnce(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
 
         m_driverController.leftTrigger(OIConstants.Driver.kControllerTriggerThreshold).whileTrue(m_drive.CommandBuilder.directDriveToNearestBranch(true, new Transform2d(0.4572, 0, Rotation2d.fromDegrees(0))));
 
@@ -178,7 +154,7 @@ public class RobotContainer {
 
         //Drives with the heading locked to point towards the center of the alliance reef
         m_driverController.a()
-            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
                 DriverStation.getAlliance().get() == Alliance.Blue 
                     ? () -> {
                         Translation2d teamReef = PointOfInterest.BLU_REEF.position;
@@ -191,11 +167,11 @@ public class RobotContainer {
                         return angleToReef.rotateBy(Rotation2d.fromDegrees(180));
                     }
             )))
-            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+            .onFalse(Commands.runOnce(() -> teleopDrive.unlockHeading()));
         
         //Drives with heading locked to align with processor-side coral station
         m_driverController.b()
-            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
                 DriverStation.getAlliance().get() == Alliance.Blue
                     ? PoseOfInterest.BLU_CORAL_STATION_PROCESSOR.pose.getRotation()
                     : PoseOfInterest.RED_CORAL_STATION_PROCESSOR.pose.getRotation()
@@ -204,7 +180,7 @@ public class RobotContainer {
 
         //Drives with heading locked to align with opposite-side coral station
         m_driverController.x()
-            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
                 DriverStation.getAlliance().get() == Alliance.Blue
                     ? PoseOfInterest.BLU_CORAL_STATION_OPPOSITE.pose.getRotation()
                     : PoseOfInterest.RED_CORAL_STATION_OPPOSITE.pose.getRotation()
@@ -213,7 +189,7 @@ public class RobotContainer {
         
         //Drives with heading locked to align straight forward
         m_driverController.y()
-            .onTrue(new InstantCommand(() -> teleopDrive.lockHeading(
+            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
                 DriverStation.getAlliance().get() == Alliance.Blue
                     ? Rotation2d.fromDegrees(0)
                     : Rotation2d.fromDegrees(180)

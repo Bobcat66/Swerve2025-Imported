@@ -83,18 +83,22 @@ public class TeleopDriveCommand extends Command {
     public boolean isFinished(){
         return !DriverStation.isTeleopEnabled();
     }
+    
     public void lockHeading(Rotation2d heading) {
         headingSupplier = () -> heading;
         reloadCommand();
     }
+
     public void lockHeading(Supplier<Rotation2d> headingSupplier) {
         this.headingSupplier = headingSupplier;
         reloadCommand();
     }
+
     public void unlockHeading() {
         headingSupplier = null;
         reloadCommand();
     }
+
     public void applyClutchFactors(double transFactor, double rotFactor) {
         this.transClutchFactor = transFactor;
         this.rotClutchFactor = rotFactor;

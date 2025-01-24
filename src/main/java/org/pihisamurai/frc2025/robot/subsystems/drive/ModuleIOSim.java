@@ -1,5 +1,4 @@
 package org.pihisamurai.frc2025.robot.subsystems.drive;
-import com.revrobotics.RelativeEncoder;
 import com.revrobotics.sim.SparkMaxSim;
 import com.revrobotics.sim.SparkRelativeEncoderSim;
 import com.revrobotics.spark.ClosedLoopSlot;
@@ -20,9 +19,6 @@ import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 
-import static org.pihisamurai.frc2025.robot.Constants.DriveConstants.odometryFrequencyHz;
-
-import org.littletonrobotics.junction.Logger;
 import org.pihisamurai.frc2025.robot.Constants.DriveConstants.ModuleConstants.ModuleConfig;
 import org.pihisamurai.frc2025.robot.Constants.DriveConstants.ModuleConstants.Common.Drive;
 import org.pihisamurai.frc2025.robot.Constants.DriveConstants.ModuleConstants.Common.Turn;
