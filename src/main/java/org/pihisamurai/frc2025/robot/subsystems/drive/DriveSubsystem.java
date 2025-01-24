@@ -264,7 +264,7 @@ public class DriveSubsystem extends SubsystemBase {
         return states;
     }
 
-
+    /** Builds drive commands */
     public class DriveCommandFactory {
 
         private DriveSubsystem drive;
@@ -326,10 +326,10 @@ public class DriveSubsystem extends SubsystemBase {
 
         public TeleopDriveCommand driveTeleop(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier, TeleopDriveMode mode, double transClutchFactor, double rotClutchFactor, Supplier<Rotation2d> headingSupplier) {
             TeleopDriveCommand driveCommand = new TeleopDriveCommand(drive, driveModeMapping, xSupplier, ySupplier, omegaSupplier, mode);
-            driveCommand.applyClutchFactors(transClutchFactor, rotClutchFactor);
+            driveCommand.setClutchFactors(transClutchFactor, rotClutchFactor);
             driveCommand.lockHeading(headingSupplier);
             return driveCommand;
         }
     }
-
+    
 }

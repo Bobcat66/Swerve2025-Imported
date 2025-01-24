@@ -139,10 +139,9 @@ public class RobotContainer {
 
         m_drive.setDefaultCommand(teleopDrive);
 
-        m_driverController.rightBumper()
-            .onTrue(Commands.runOnce(() -> teleopDrive.applyClutchFactors(doubleClutchTranslationFactor, doubleClutchRotationFactor)))
-            .onFalse(Commands.runOnce(() -> teleopDrive.applyClutchFactors(1.0, 1.0)));
+        m_driverController.rightBumper().whileTrue(teleopDrive.applyDoubleClutch());
 
+        m_driverController.leftBumper().whileTrue(teleopDrive.applySingleClutch());
         
         m_driverController.leftBumper()
             .onTrue(Commands.runOnce(() -> teleopDrive.applyClutchFactors(singleClutchTranslationFactor, singleClutchRotationFactor)))
@@ -153,48 +152,16 @@ public class RobotContainer {
         m_driverController.rightTrigger(OIConstants.Driver.kControllerTriggerThreshold).whileTrue(m_drive.CommandBuilder.directDriveToNearestBranch(false, new Transform2d(0.4572, 0, Rotation2d.fromDegrees(0))));
 
         //Drives with the heading locked to point towards the center of the alliance reef
-        m_driverController.a()
-            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
-                DriverStation.getAlliance().get() == Alliance.Blue 
-                    ? () -> {
-                        Translation2d teamReef = PointOfInterest.BLU_REEF.position;
-                        Rotation2d angleToReef = teamReef.minus(m_drive.getPose().getTranslation()).getAngle();
-                        return angleToReef.rotateBy(Rotation2d.fromDegrees(180));
-                    }
-                    : () -> {
-                        Translation2d teamReef = PointOfInterest.RED_REEF.position;
-                        Rotation2d angleToReef = teamReef.minus(m_drive.getPose().getTranslation()).getAngle();
-                        return angleToReef.rotateBy(Rotation2d.fromDegrees(180));
-                    }
-            )))
-            .onFalse(Commands.runOnce(() -> teleopDrive.unlockHeading()));
+        m_driverController.a().whileTrue(teleopDrive.applyReefHeadingLock());
         
         //Drives with heading locked to align with processor-side coral station
-        m_driverController.b()
-            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
-                DriverStation.getAlliance().get() == Alliance.Blue
-                    ? PoseOfInterest.BLU_CORAL_STATION_PROCESSOR.pose.getRotation()
-                    : PoseOfInterest.RED_CORAL_STATION_PROCESSOR.pose.getRotation()
-            )))
-            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+        m_driverController.b().whileTrue(teleopDrive.applyProcessorCoralStationHeadingLock());
 
         //Drives with heading locked to align with opposite-side coral station
-        m_driverController.x()
-            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
-                DriverStation.getAlliance().get() == Alliance.Blue
-                    ? PoseOfInterest.BLU_CORAL_STATION_OPPOSITE.pose.getRotation()
-                    : PoseOfInterest.RED_CORAL_STATION_OPPOSITE.pose.getRotation()
-            )))
-            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+        m_driverController.x().whileTrue(teleopDrive.applyOppositeCoralStationHeadingLock());
         
         //Drives with heading locked to align straight forward
-        m_driverController.y()
-            .onTrue(Commands.runOnce(() -> teleopDrive.lockHeading(
-                DriverStation.getAlliance().get() == Alliance.Blue
-                    ? Rotation2d.fromDegrees(0)
-                    : Rotation2d.fromDegrees(180)
-            )))
-            .onFalse(new InstantCommand(() -> teleopDrive.unlockHeading()));
+        m_driverController.y().whileTrue(teleopDrive.applyForwardHeadingLock());
     }
 
     /**
