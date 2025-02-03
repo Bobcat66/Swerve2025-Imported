@@ -58,26 +58,26 @@ public final class Localization {
     /** Returns a list of all coral stations */
     public static List<Pose2d> getCoralStationPoses() {
         List<Pose2d> poseList = new ArrayList<>();
-        poseList.add(PoseOfInterest.BLU_CORAL_STATION_OPPOSITE.pose);
-        poseList.add(PoseOfInterest.BLU_CORAL_STATION_PROCESSOR.pose);
-        poseList.add(PoseOfInterest.RED_CORAL_STATION_PROCESSOR.pose);
-        poseList.add(PoseOfInterest.RED_CORAL_STATION_OPPOSITE.pose);
+        poseList.add(PoseOfInterest.BLU_LEFT_STATION.pose);
+        poseList.add(PoseOfInterest.BLU_RIGHT_STATION.pose);
+        poseList.add(PoseOfInterest.RED_RIGHT_STATION.pose);
+        poseList.add(PoseOfInterest.RED_LEFT_STATION.pose);
         return poseList;
     }
 
     /** Returns a list of red coral stations */
     public static List<Pose2d> getRedCoralStationPoses() {
         List<Pose2d> poseList = new ArrayList<>();
-        poseList.add(PoseOfInterest.RED_CORAL_STATION_PROCESSOR.pose);
-        poseList.add(PoseOfInterest.RED_CORAL_STATION_OPPOSITE.pose);
+        poseList.add(PoseOfInterest.RED_RIGHT_STATION.pose);
+        poseList.add(PoseOfInterest.RED_LEFT_STATION.pose);
         return poseList;
     }
 
     /** Returns a list of blue coral stations */
     public static List<Pose2d> getBlueCoralStationPoses() {
         List<Pose2d> poseList = new ArrayList<>();
-        poseList.add(PoseOfInterest.BLU_CORAL_STATION_OPPOSITE.pose);
-        poseList.add(PoseOfInterest.BLU_CORAL_STATION_PROCESSOR.pose);
+        poseList.add(PoseOfInterest.BLU_LEFT_STATION.pose);
+        poseList.add(PoseOfInterest.BLU_RIGHT_STATION.pose);
         return poseList;
     }
 
