@@ -49,8 +49,8 @@ public final class Constants {
 
     public static class VisionConstants {
         public static enum CamConfig {
-            LEFT_ARDUCAM("FLMOD_CAM", DriveConstants.moduleTranslations[0].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(6), 0, 0, Math.PI/4),
-            RIGHT_ARDUCAM("FRMOD_CAM", DriveConstants.moduleTranslations[2].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(6), 0, 0, 0);
+            LEFT_ARDUCAM("FLMOD_CAM", DriveConstants.moduleTranslations[0].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(14), 0, 0, 0),
+            RIGHT_ARDUCAM("FRMOD_CAM", DriveConstants.moduleTranslations[2].getX(), moduleTranslations[0].getY(), Units.inchesToMeters(14), 0, 0, 0);
 
             public final String name;
             public final double x;
@@ -86,7 +86,7 @@ public final class Constants {
     public static class Akit {
         //0 = real, 1 = Sim, 2 = replay
         //If statements that evaluate this constant expression are used to implement C-style 
-        public static final int currentMode = 1;
+        public static final int currentMode = 0;
     }
       
     /** Contains data about the field */
@@ -295,8 +295,8 @@ public final class Constants {
 
                 FrontLeft(1, 11, 21, -0.441162109375 + 0.5),
                 FrontRight(2, 12, 22, -0.3984375 + 0.5),
-                RearLeft(3, 13, 23, -0.525146484375),
-                RearRight(4, 14, 24, -0.931396484375);
+                RearLeft(3, 13, 23, -0.525146484375 + 0.5),
+                RearRight(4, 14, 24, -0.931396484375 + 0.5);
 
                 public final int DrivePort;
                 public final int TurnPort;
