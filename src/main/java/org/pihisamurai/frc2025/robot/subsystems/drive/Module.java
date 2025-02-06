@@ -1,6 +1,7 @@
 package org.pihisamurai.frc2025.robot.subsystems.drive;
 
 import org.littletonrobotics.junction.Logger;
+import org.pihisamurai.frc2025.robot.Constants.Akit;
 import org.pihisamurai.frc2025.robot.Constants.DriveConstants.ModuleConstants.Common.Drive;
 
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
@@ -87,9 +88,14 @@ public class Module {
     /** Must be manually called by DriveSubsystem. WARNING: NOT THREAD-SAFE, SHOULD ONLY BE CALLED FROM MAIN THREAD */
     public void periodic(){
         io.updateInputs(inputs);
-        Logger.processInputs("Drive/" + ID, inputs);
+
+        if (Akit.enabled) {
+            Logger.processInputs("Drive/" + ID, inputs);
+        }
+        
         int sampleCount = OdometryThread.getInstance().sampleCount;
         odometryModulePositions = new SwerveModulePosition[sampleCount];
+        
         for (int i = 0; i < sampleCount; i++){
             odometryModulePositions[i] = new SwerveModulePosition(inputs.odometryDrivePositionsMeters[i],inputs.odometryTurnPositions[i]);
         }

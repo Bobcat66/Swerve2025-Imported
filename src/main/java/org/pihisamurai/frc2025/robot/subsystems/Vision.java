@@ -4,6 +4,7 @@ import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVisi
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kLocalizationStrategy;
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kMultiTagDefaultStdDevs;
 import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.PhotonVision.kSingleTagDefaultStdDevs;
+import static org.pihisamurai.frc2025.robot.Constants.VisionConstants.kFieldLayout;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,8 +18,6 @@ import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 import org.pihisamurai.frc2025.robot.Constants.VisionConstants.CamConfig;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -33,7 +32,7 @@ public class Vision {
         public PhotonPoseEstimator estimator;
         public CamStruct(String name,Transform3d offset) {
             this.camera = new PhotonCamera(name);
-            this.estimator = new PhotonPoseEstimator(AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField), kLocalizationStrategy, offset);
+            this.estimator = new PhotonPoseEstimator(kFieldLayout, kLocalizationStrategy, offset);
             this.estimator.setMultiTagFallbackStrategy(kFallbackStrategy);
         }
     }

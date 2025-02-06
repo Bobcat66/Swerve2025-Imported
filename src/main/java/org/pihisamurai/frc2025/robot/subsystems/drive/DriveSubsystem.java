@@ -142,8 +142,10 @@ public class DriveSubsystem extends SubsystemBase {
             modules[i].setDesiredState(setpointStates[i]);
         }
         SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
-        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-        Logger.recordOutput("SwerveStates/Actual", actualStates);
+        if (Akit.enabled) {    
+            Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+            Logger.recordOutput("SwerveStates/Actual", actualStates);
+        }
     }
 
     /** Chassis-oriented Closed-loop driving */
@@ -155,9 +157,10 @@ public class DriveSubsystem extends SubsystemBase {
             modules[i].setDesiredState(setpointStates[i]);
         }
         SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
-        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-        Logger.recordOutput("SwerveStates/Actual", actualStates);
-        //System.out.println("Finished Driving Chassis Oriented");
+        if (Akit.enabled) {    
+            Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+            Logger.recordOutput("SwerveStates/Actual", actualStates);
+        }
     }
 
     /** Chassis-oriented Open-loop driving */
@@ -168,8 +171,10 @@ public class DriveSubsystem extends SubsystemBase {
             modules[i].setDesiredStateOpenLoop(setpointStates[i]);
         }
         SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
-        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-        Logger.recordOutput("SwerveStates/Actual", actualStates);
+        if (Akit.enabled) {    
+            Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+            Logger.recordOutput("SwerveStates/Actual", actualStates);
+        }
     }
 
     /** Field-oriented Open-loop driving */
@@ -181,8 +186,10 @@ public class DriveSubsystem extends SubsystemBase {
             modules[i].setDesiredStateOpenLoop(setpointStates[i]);
         }
         SwerveModuleState[] actualStates = {modules[0].getState(), modules[1].getState(), modules[2].getState(), modules[3].getState()};
-        Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
-        Logger.recordOutput("SwerveStates/Actual", actualStates);
+        if (Akit.enabled) {    
+            Logger.recordOutput("SwerveStates/Setpoints",setpointStates);
+            Logger.recordOutput("SwerveStates/Actual", actualStates);
+        }
     }
 
     @Override
@@ -205,7 +212,10 @@ public class DriveSubsystem extends SubsystemBase {
         
         //Update gyro logging
         gyroIO.updateInputs(gyroInputs);
-        Logger.processInputs("Drive/Gyro", gyroInputs);
+
+        if (Akit.enabled) {
+            Logger.processInputs("Drive/Gyro", gyroInputs);
+        }
 
         //Update module logging, process odometry
         for (Module module : modules) {

@@ -23,6 +23,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 
 import static edu.wpi.first.units.Units.MetersPerSecond;
@@ -80,6 +82,7 @@ public final class Constants {
             public static final Matrix<N3, N1> kMultiTagDefaultStdDevs = VecBuilder.fill(0.5, 0.5, 1);
         }
 
+        public static final AprilTagFieldLayout kFieldLayout = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
     }
     
 
@@ -87,10 +90,13 @@ public final class Constants {
         //0 = real, 1 = Sim, 2 = replay
         //If statements that evaluate this constant expression are used to implement C-style 
         public static final int currentMode = 0;
+
+        public static final boolean enabled = true;
     }
       
     /** Contains data about the field */
     public static class FieldConstants {
+
         private static final double branchOffset = Units.inchesToMeters(6.469);
         private static final Transform2d leftBranchTransform = new Transform2d(0.0, -branchOffset, Rotation2d.kZero);
         private static final Transform2d rightBranchTransform = new Transform2d(0.0, branchOffset, Rotation2d.kZero);
