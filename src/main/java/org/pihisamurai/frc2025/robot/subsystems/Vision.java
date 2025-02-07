@@ -21,6 +21,7 @@ import org.pihisamurai.frc2025.robot.Constants.VisionConstants.CamConfig;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -90,10 +91,10 @@ public class Vision {
             var estStdDevs = kSingleTagDefaultStdDevs;
             int numTags = 0;
             double avgDist = 0;
-
+            Optional<Pose3d> tagPose;
             // Precalculation - see how many tags we found, and calculate an average-distance metric
             for (var tgt : targets) {
-                var tagPose = cam.estimator.getFieldTags().getTagPose(tgt.getFiducialId());
+                tagPose = cam.estimator.getFieldTags().getTagPose(tgt.getFiducialId());
                 if (tagPose.isEmpty()) {continue;}
                 numTags++;
                 avgDist +=

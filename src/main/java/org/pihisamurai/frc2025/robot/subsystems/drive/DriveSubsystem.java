@@ -117,10 +117,8 @@ public class DriveSubsystem extends SubsystemBase {
         return kinematics.toChassisSpeeds(getModuleStates());
     }
 
-    @AutoLogOutput(key = "Odometry/Robot")
     public Pose2d getPose(){
         Pose2d out = poseEstimator.getEstimatedPosition();
-        //System.out.println(out);
         return out;
     }
 
@@ -215,6 +213,7 @@ public class DriveSubsystem extends SubsystemBase {
 
         if (Akit.enabled) {
             Logger.processInputs("Drive/Gyro", gyroInputs);
+            Logger.recordOutput("Odometry/Robot",getPose());
         }
 
         //Update module logging, process odometry

@@ -178,8 +178,8 @@ public class TeleopDriveCommand extends Command {
     public Command applyForwardHeadingLock() {
         return applyHeadingLock(
             DriverStation.getAlliance().get() == Alliance.Blue
-                ? Rotation2d.fromDegrees(0)
-                : Rotation2d.fromDegrees(180)
+                ? Rotation2d.kZero
+                : Rotation2d.k180deg
         );
     }
 }

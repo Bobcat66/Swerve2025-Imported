@@ -133,8 +133,6 @@ public class RobotContainer {
         //System.out.println("CONFBINDINGS");
 
         //Pose2d targetPose = new Pose2d(Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[0], Localization.getClosestAprilTagCoordinates(m_drive.getPose().getX(), m_drive.getPose().getY())[1], Rotation2d.fromDegrees(180));
-        Pose2d targetPose = Localization.getClosestReefFace(m_drive.getPose()).AprilTag;
-        PathConstraints constraints = new PathConstraints(MetersPerSecond.of(5), MetersPerSecondPerSecond.of(5), RadiansPerSecond.of(5), RadiansPerSecondPerSecond.of(5));
         // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
 
         m_drive.setDefaultCommand(teleopDrive);
