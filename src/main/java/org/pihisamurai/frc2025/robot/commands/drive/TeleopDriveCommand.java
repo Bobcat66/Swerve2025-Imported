@@ -142,7 +142,7 @@ public class TeleopDriveCommand extends Command {
     //** Returns a command that applies a heading lock orentied to the center of the reef to the TeleopDriveCommand */
     public Command applyReefHeadingLock(){
         return applyHeadingLock(
-            DriverStation.getAlliance().get() == Alliance.Blue 
+            DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue 
                 ? () -> {
                     Translation2d teamReef = PointOfInterest.BLU_REEF.position;
                     Rotation2d angleToReef = teamReef.minus(drive.getPose().getTranslation()).getAngle();
@@ -159,7 +159,7 @@ public class TeleopDriveCommand extends Command {
     //** Returns a command that applies a heading lock oriented to the processor-side coral station to the TeleopDriveCommand */
     public Command applyProcessorCoralStationHeadingLock() {
         return applyHeadingLock(
-            DriverStation.getAlliance().get() == Alliance.Blue
+            DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
                 ? PoseOfInterest.BLU_RIGHT_STATION.pose.getRotation()
                 : PoseOfInterest.RED_RIGHT_STATION.pose.getRotation()
         );
@@ -168,7 +168,7 @@ public class TeleopDriveCommand extends Command {
     //** Returns a command that applies a heading lock oriented to the opposite-side coral station to the TeleopDriveCommand */
     public Command applyOppositeCoralStationHeadingLock() {
         return applyHeadingLock(
-            DriverStation.getAlliance().get() == Alliance.Blue
+            DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Blue
                 ? PoseOfInterest.BLU_LEFT_STATION.pose.getRotation()
                 : PoseOfInterest.RED_LEFT_STATION.pose.getRotation()
         );
