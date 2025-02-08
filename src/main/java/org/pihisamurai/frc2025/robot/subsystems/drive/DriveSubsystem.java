@@ -113,6 +113,12 @@ public class DriveSubsystem extends SubsystemBase {
         return states;
     }
 
+    public void setModuleStates(SwerveModuleState[] states){
+        for (int i = 0; i < 4; i++) {
+            modules[i].setDesiredState(states[i]);
+        }
+    }
+
     public ChassisSpeeds getChassisSpeeds(){
         return kinematics.toChassisSpeeds(getModuleStates());
     }
