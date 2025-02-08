@@ -123,9 +123,10 @@ public class RobotContainer {
         swiffDriveCommandFactory = new SwerverrentialDriveCommandFactory(m_drive);
         
         m_drive.setDefaultCommand(
-            swiffDriveCommandFactory.buildArcadeDriveCommand(
+            swiffDriveCommandFactory.buildCurvatureDriveCommand(
                 () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
-                () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband)
+                () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband),
+                false
             )
         );
         //configureBindings();
