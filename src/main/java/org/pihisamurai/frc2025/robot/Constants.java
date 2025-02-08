@@ -89,7 +89,7 @@ public final class Constants {
     public static class Akit {
         //0 = real, 1 = Sim, 2 = replay
         //If statements that evaluate this constant expression are used to implement C-style 
-        public static final int currentMode = 0;
+        public static final int currentMode = 1;
 
         public static final boolean enabled = true;
     }

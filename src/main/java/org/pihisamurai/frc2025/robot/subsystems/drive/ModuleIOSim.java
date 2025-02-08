@@ -121,7 +121,7 @@ public class ModuleIOSim implements ModuleIO {
         //System.out.println(driveEncoderSim.getVelocityConversionFactor());
 
         m_driveMotorModel.setInputVoltage(m_driveSim.getBusVoltage() * m_driveSim.getAppliedOutput());
-        m_driveMotorModel.update(0.2);
+        m_driveMotorModel.update(0.02);
 
         m_driveSim.iterate(m_driveMotorModel.getAngularVelocityRPM() * Drive.VelocityConversionFactor * Drive.gearRatio, m_driveSim.getBusVoltage(), 0.02);
         inputs.drivePositionMeters = driveEncoderSim.getPosition();
@@ -131,7 +131,7 @@ public class ModuleIOSim implements ModuleIO {
         
         
         m_turnMotorModel.setInputVoltage(m_turnSim.getBusVoltage() * m_turnSim.getAppliedOutput());
-        m_turnMotorModel.update(0.2);
+        m_turnMotorModel.update(0.02);
         m_turnSim.iterate(m_turnMotorModel.getAngularVelocityRPM(), m_turnSim.getBusVoltage(), 0.02);
         inputs.turnAbsolutePosition = Rotation2d.fromRotations(turnEncoderSim.getPosition());
         inputs.turnPosition = Rotation2d.fromRotations(turnEncoderSim.getPosition());

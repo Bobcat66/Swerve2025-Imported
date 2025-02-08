@@ -33,6 +33,7 @@ import org.pihisamurai.frc2025.robot.Constants.FieldConstants.PointOfInterest;
 import org.pihisamurai.frc2025.robot.Constants.FieldConstants.PoseOfInterest;
 import org.pihisamurai.frc2025.robot.Constants.VisionConstants.CamConfig;
 import org.pihisamurai.frc2025.robot.commands.ExampleCommand;
+import org.pihisamurai.frc2025.robot.commands.drive.SwerverrentialDriveCommandFactory;
 import org.pihisamurai.frc2025.robot.commands.drive.TeleopDriveCommand;
 //import org.pihisamurai.frc2025.robot.commands.drive.DriveClosedLoopTeleop;
 import org.pihisamurai.frc2025.robot.subsystems.ExampleSubsystem;
@@ -77,6 +78,8 @@ public class RobotContainer {
 
     private final TeleopDriveCommand teleopDrive;
 
+    private final SwerverrentialDriveCommandFactory swiffDriveCommandFactory;
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     @SuppressWarnings("unused")
     public RobotContainer() {
@@ -116,8 +119,16 @@ public class RobotContainer {
             1.0,
             null
         );
+
+        swiffDriveCommandFactory = new SwerverrentialDriveCommandFactory(m_drive);
         
-        configureBindings();
+        m_drive.setDefaultCommand(
+            swiffDriveCommandFactory.buildArcadeDriveCommand(
+                () -> MathUtil.applyDeadband(-m_driverController.getLeftY(), OIConstants.Driver.kControllerDeadband),
+                () -> MathUtil.applyDeadband(-m_driverController.getRightX(), OIConstants.Driver.kControllerDeadband)
+            )
+        );
+        //configureBindings();
     }
 
     /**
