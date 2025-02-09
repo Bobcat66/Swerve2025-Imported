@@ -225,10 +225,10 @@ public final class Constants {
             );
 
             public static final PathConstraints pathConstraints = new PathConstraints(
-                MetersPerSecond.of(0.25), 
-                MetersPerSecondPerSecond.of(0.25), 
-                RadiansPerSecond.of(0.25), 
-                RadiansPerSecondPerSecond.of(0.25)
+                MetersPerSecond.of(2), 
+                MetersPerSecondPerSecond.of(2), 
+                RadiansPerSecond.of(2), 
+                RadiansPerSecondPerSecond.of(2)
             );
         
 
